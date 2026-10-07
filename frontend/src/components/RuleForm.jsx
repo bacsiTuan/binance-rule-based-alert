@@ -14,16 +14,39 @@ function Field({ id, label, error, hint, children }) {
   );
 }
 
-export default function RuleForm({ symbols, onSubmit }) {
+export default function RuleForm({
+  symbols,
+  onSubmit,
+  activeSymbol,
+  onSymbolChange,
+  activeTimeframe,
+  onTimeframeChange,
+}) {
   const [form, setForm] = useState(initialForm);
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
 
+  // Đồng bộ symbol khi chọn từ ngoài
+  useEffect(() => {
+    if (activeSymbol && activeSymbol !== form.symbol) {
+      setForm((f) => ({ ...f, symbol: activeSymbol }));
+    }
+  }, [activeSymbol]);
+
+  // Đồng bộ timeframe khi chọn từ ngoài
+  useEffect(() => {
+    if (activeTimeframe && activeTimeframe !== form.timeframe) {
+      setForm((f) => ({ ...f, timeframe: activeTimeframe }));
+    }
+  }, [activeTimeframe]);
+
   // Khi danh sách symbol tải xong mà symbol hiện tại không có trong đó, chọn symbol đầu tiên.
   useEffect(() => {
     if (symbols.length && !symbols.includes(form.symbol)) {
-      setForm((f) => ({ ...f, symbol: symbols[0] }));
+      const defaultSymbol = symbols[0];
+      setForm((f) => ({ ...f, symbol: defaultSymbol }));
+      if (onSymbolChange) onSymbolChange(defaultSymbol);
     }
   }, [symbols]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -85,13 +108,29 @@ export default function RuleForm({ symbols, onSubmit }) {
 
       <div className="row">
         <Field id="symbol" label="Symbol" error={shown.symbol}>
-          <select id="symbol" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })}>
+          <select
+            id="symbol"
+            value={form.symbol}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm({ ...form, symbol: val });
+              if (onSymbolChange) onSymbolChange(val);
+            }}
+          >
             {symbols.length === 0 && <option value="">Đang tải…</option>}
             {symbols.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </Field>
         <Field id="timeframe" label="Khung thời gian">
-          <select id="timeframe" value={form.timeframe} onChange={(e) => setForm({ ...form, timeframe: e.target.value })}>
+          <select
+            id="timeframe"
+            value={form.timeframe}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm({ ...form, timeframe: val });
+              if (onTimeframeChange) onTimeframeChange(val);
+            }}
+          >
             {TIMEFRAMES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </Field>
