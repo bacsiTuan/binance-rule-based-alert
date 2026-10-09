@@ -7,6 +7,13 @@ Phần đầu của dự án Python: gọi Binance REST lấy dữ liệu nến 
 Mặc định dùng **Spot** theo kế hoạch `prototype-project-plan.docx`; có thể đổi sang
 **USDⓈ-M Futures** bằng biến môi trường. Dữ liệu được lấy khi gọi API hoặc CLI.
 
+Source được tách thành [FE/](FE/README.md) cho frontend và [BE/](BE/README.md)
+cho backend. `BE/` có code Python; `FE/` có giao diện React + Vite quản lý rules
+và biểu đồ TradingView, mặc định dùng dữ liệu mock. `compose.yaml`, `.env` của
+backend và tài liệu chạy nằm ở thư mục gốc. Cấu hình frontend nằm tại `FE/.env`.
+
+Chạy giao diện bằng `npm ci` rồi `npm run dev` trong `FE/`; xem [README frontend](FE/README.md).
+
 ## Chạy toàn bộ bằng Docker trên máy này hoặc máy khác
 
 Cài và mở Docker Desktop (Linux containers) trên Windows/macOS, hoặc Docker Engine
@@ -74,15 +81,17 @@ Cần Python 3.11+ và Docker Desktop đang chạy Linux containers.
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]" -c requirements.lock.txt
-Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m pip install -e "./BE[dev]" -c BE/requirements.lock.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up -d redis
 docker compose exec -T redis redis-cli ping
 ```
 
 Redis trả về `PONG`. Redis dùng volume `redis_data`, bật AOF để giữ dữ liệu sau khi
 container restart; key vẫn hết hạn theo TTL. Port 6379 chỉ bind vào localhost.
-`requirements.lock.txt` cố định các phiên bản dependency đã dùng khi kiểm thử.
+`BE/requirements.lock.txt` cố định các phiên bản dependency đã dùng khi kiểm thử.
+Chạy Python local tại thư mục gốc để ứng dụng đọc đúng `.env`. Nếu đã cài v1 trước
+khi tách thư mục, cài lại editable bằng lệnh `pip install` trên để cập nhật source path.
 
 Lấy 300 nến BTCUSDT khung 1 giờ và lưu Redis ngay, không cần chạy web server:
 
@@ -93,7 +102,7 @@ Lấy 300 nến BTCUSDT khung 1 giờ và lưu Redis ngay, không cần chạy w
 Chạy backend để frontend hoặc Swagger gọi:
 
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir BE --reload --host 127.0.0.1 --port 8000
 ```
 
 Mở Swagger tại <http://127.0.0.1:8000/docs>.
@@ -199,8 +208,8 @@ Không tự chuyển host hoặc thị trường khi có lỗi; response luôn g
 ## Kiểm thử
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m ruff check app tests
+.\.venv\Scripts\python.exe -m pytest BE/tests -q
+.\.venv\Scripts\python.exe -m ruff check --config BE/pyproject.toml BE/app BE/tests
 ```
 
 Test tự động dùng mock HTTP và fakeredis, không gọi Binance, không xóa Redis thật.
@@ -215,22 +224,35 @@ Kiểm thử thủ công với Redis thật dùng CLI hoặc các request ở tr
 ## Cấu trúc
 
 ```text
-app/
-  main.py                 FastAPI và vòng đời HTTP/Redis connections
-  config.py               Cấu hình .env
-  models.py               Candle và response schema
-  errors.py               Lỗi Binance/Redis
-  cli.py                  Fetch một lần và lưu Redis
-  binance/client.py       Binance REST, retry và cooldown
-  cache/redis_cache.py    Redis JSON và TTL
-  service.py              Cache hit/miss và stale fallback
-tests/test_market_data.py
-compose.yaml              Redis Docker
-Dockerfile                Python backend trong Docker
+FE/
+  src/                    Giao diện React và API client
+  package.json            Dependency và lệnh chạy frontend
+  package-lock.json       Phiên bản dependency frontend
+  vite.config.js          Cấu hình Vite và proxy API
+  .env.example            Cấu hình frontend mẫu
+  README.md               Hướng dẫn chạy frontend
+BE/
+  app/
+    main.py               FastAPI và vòng đời HTTP/Redis connections
+    config.py             Cấu hình .env
+    models.py             Candle và response schema
+    errors.py             Lỗi Binance/Redis
+    cli.py                Fetch một lần và lưu Redis
+    binance/client.py     Binance REST, retry và cooldown
+    cache/redis_cache.py  Redis JSON và TTL
+    service.py            Cache hit/miss và stale fallback
+  tests/test_market_data.py
+  pyproject.toml          Dependency và cấu hình Python
+  requirements.lock.txt   Phiên bản dependency
+  Dockerfile              Build backend trong Docker
+  .dockerignore           Cấu hình Docker build context
+compose.yaml              Khởi động backend và Redis
+.env.example              Cấu hình mẫu cho cả dự án
+HUONG_DAN_CHAY.md          Hướng dẫn chạy và cấu hình .env
 ```
 
 V1 này hoàn thiện bước Binance → Redis. Indicator SMA/EMA/RSI, rule engine,
-SQL lưu rules/alerts và frontend sẽ được thêm ở các bước tiếp theo.
+SQL lưu rules/alerts và kết nối frontend với đầy đủ API thật sẽ được thêm ở các bước tiếp theo.
 
 Tài liệu tham khảo:
 

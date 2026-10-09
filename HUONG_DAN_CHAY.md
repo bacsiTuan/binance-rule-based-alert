@@ -4,7 +4,9 @@ Tài liệu này dành cho người vừa clone hoặc tải dự án về máy.
 Docker để khởi động **FastAPI backend và Redis**, không cần cài Python hay Redis riêng.
 
 V1 lấy dữ liệu nến từ Binance khi gọi API hoặc CLI, lưu vào Redis và dùng lại cache
-trong 60 giây. Hiện chưa có frontend, indicator, rule engine hoặc worker tự fetch theo lịch.
+trong 60 giây. Backend hiện chưa có indicator, rule engine hoặc worker tự fetch theo lịch.
+Source backend nằm trong `BE/`; `FE/` có giao diện React + Vite với dữ liệu rule mock.
+Docker Compose chạy backend và Redis. Để chạy giao diện, xem [README frontend](FE/README.md).
 
 ## 1. Chuẩn bị
 
@@ -33,8 +35,8 @@ git clone URL_REPOSITORY binance-rule-based-alert
 cd binance-rule-based-alert
 ```
 
-Nếu tải ZIP, giải nén và mở terminal trong thư mục có `compose.yaml`, `Dockerfile`
-và `.env.example`. Các lệnh bên dưới đều chạy tại thư mục này.
+Nếu tải ZIP, giải nén và mở terminal trong thư mục gốc có `compose.yaml`, `BE/`,
+`FE/` và `.env.example`. Các lệnh bên dưới đều chạy tại thư mục này.
 
 Tạo `.env` lần đầu trên **Windows PowerShell**:
 
@@ -134,8 +136,17 @@ binance-rule-based-alert/
   .env
   .env.example
   compose.yaml
-  Dockerfile
-  app/
+  BE/
+    Dockerfile
+    app/
+    tests/
+    pyproject.toml
+    requirements.lock.txt
+  FE/
+    src/
+    package.json
+    .env.example
+    README.md
 ```
 
 Mở `.env` bằng VS Code, trình soạn thảo của IDE hoặc Notepad. Trên Windows:
@@ -229,6 +240,11 @@ cũng được: `compose.yaml` đặt backend trong container dùng `redis://red
 Tên `redis` được phân giải trong mạng Docker; `localhost` bên trong container là
 chính container đó.
 
+Khi chạy **Python local**, cài backend bằng `pip install -e "./BE[dev]" -c BE/requirements.lock.txt`
+từ thư mục gốc theo [README backend](BE/README.md). Luôn chạy Uvicorn hoặc CLI tại
+thư mục gốc để ứng dụng đọc đúng `.env`. Nếu đã cài bản cũ trước khi tách `FE/BE/`,
+chạy lại lệnh cài editable để cập nhật đường dẫn source.
+
 Khi chạy **Python local** bằng Uvicorn hoặc CLI trên máy host, ứng dụng đọc
 `REDIS_URL` từ `.env`. Nếu Redis Docker được publish ở port 6379 thì dùng:
 
@@ -320,5 +336,6 @@ chạy bản riêng để dùng các URL trong hướng dẫn này.
 ## 8. Tài liệu thêm
 
 - [README dự án](README.md): cấu trúc code, cách chạy Python local và kiểm thử.
+- [README frontend](FE/README.md): chạy React + Vite và cấu hình `FE/.env`.
 - [Docker Compose startup và healthcheck](https://docs.docker.com/compose/how-tos/startup-order/).
 - [Binance Spot REST API](https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md).
