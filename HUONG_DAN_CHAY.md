@@ -4,9 +4,15 @@ Tài liệu này dành cho người vừa clone hoặc tải dự án về máy.
 Docker để khởi động **FastAPI backend và Redis**, không cần cài Python hay Redis riêng.
 
 V1 lấy dữ liệu nến từ Binance khi gọi API hoặc CLI, lưu vào Redis và dùng lại cache
-trong 60 giây. Backend hiện chưa có indicator, rule engine hoặc worker tự fetch theo lịch.
-Source backend nằm trong `BE/`; `FE/` có giao diện React + Vite với dữ liệu rule mock.
+trong 60 giây. Backend có API tính SMA/EMA/RSI; chưa có rule engine hoặc worker tự fetch theo lịch.
+Source backend nằm trong `BE/`; `FE/` lấy symbol/chỉ báo thật từ BE, luật lưu trong trình duyệt.
 Docker Compose chạy backend và Redis. Để chạy giao diện, xem [README frontend](FE/README.md).
+
+Nếu vừa pull code mới, chạy `docker compose up -d --build --wait` tại thư mục gốc.
+Trong `FE/.env`, đặt `VITE_USE_MOCK=false` và
+`VITE_API_TARGET=http://127.0.0.1:8000` (đổi cổng theo BE nếu cần).
+Mở terminal khác tại `FE/`, chạy `npm.cmd ci` rồi `npm.cmd run dev`.
+Nếu FE đang chạy, dừng bằng Ctrl+C trước khi cài và chạy lại để nhận cấu hình mới.
 
 ## 1. Chuẩn bị
 
