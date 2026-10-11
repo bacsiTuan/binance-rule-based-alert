@@ -1,5 +1,7 @@
 # Binance Rule Based Alert — v1
 
+Quy trình phát triển với GitHub Spec Kit và Codex: xem [SPEC_KIT.md](SPEC_KIT.md).
+
 Người mới clone dự án: đọc [Hướng dẫn chạy](HUONG_DAN_CHAY.md) để khởi động backend
 và Redis bằng Docker trên Windows, Linux hoặc macOS.
 
@@ -125,6 +127,7 @@ gọi Binance. `/health` kiểm tra Redis; endpoint này không kiểm tra kết
 | `GET /klines?symbol=BTCUSDT&interval=1h&limit=300` | Lấy nến, cache miss gọi Binance và lưu Redis |
 | `GET /symbols` | Các symbol đang TRADING và có quote asset USDT, cache 1 giờ |
 | `GET /health` | Kiểm tra Redis và thị trường đã cấu hình |
+| `POST /indicators` | Tính SMA, EMA, RSI Wilder trên một snapshot nến, giữ metadata nguồn |
 
 Interval được hỗ trợ: `1h`, `1d`, `1w` (chữ thường). Limit: 1–1000, mặc định 300.
 Symbol được chuyển thành chữ hoa. Các endpoint market data này không cần API key.
@@ -151,8 +154,49 @@ Ví dụ cấu trúc response (giá và timestamp minh họa):
 }
 ```
 
-Nến cuối có thể chưa đóng. Khi thêm indicator/rule engine, lọc nến theo
-`close_time < thời gian hiện tại UTC` nếu muốn chỉ dùng nến đã đóng.
+Nến cuối trong `/klines` có thể chưa đóng và vẫn được giữ nguyên trong response.
+
+## Tính SMA, EMA và RSI Wilder
+
+`POST /indicators` dùng chung luồng Binance/Redis hiện có, không tạo cache chỉ báo,
+không tự lấy thêm nến khi thiếu lịch sử. Ví dụ PowerShell:
+
+```powershell
+$body = '{"symbol":"BTCUSDT","interval":"1h","limit":300,"indicators":[{"name":"sma","period":20},{"name":"sma","period":50},{"name":"ema","period":14},{"name":"rsi","period":14}]}'
+Invoke-RestMethod -Method Post 'http://127.0.0.1:8000/indicators' -ContentType 'application/json' -Body $body
+```
+
+Mặc định symbol `BTCUSDT`, interval `1h`, limit 300, period 14, `include_open=false`.
+Tên chỉ báo dùng chữ thường `sma`, `ema`, `rsi`; chu kỳ là số nguyên 1–999.
+Cho phép nhiều chu kỳ cùng loại, từ chối toàn bộ yêu cầu nếu trùng cặp tên–chu kỳ,
+kể cả trùng sau khi áp dụng mặc định. Body sai trả 422 trước khi gọi nguồn.
+
+- SMA là trung bình N giá; EMA khởi tạo bằng SMA(N), hệ số `2/(N+1)`.
+- RSI dùng N biến động từ N+1 nến và làm mượt Wilder. Không tăng/giảm cho RSI 50;
+  chỉ tăng cho 100, chỉ giảm cho 0.
+- SMA/EMA cần N nến, RSI cần N+1. Các điểm chưa đủ dữ liệu có `value=null`,
+  `status=insufficient_data`; yêu cầu vẫn trả HTTP 200. Mỗi cặp trả `points`,
+  `latest`, `required_candles` và `available_candles`; giá trị là chuỗi thập phân.
+- Mặc định chỉ dùng `close_time < min(evaluated_at, fetched_at_UTC_ms)`.
+  `include_open=true` cho phép nến mở, gắn `provisional=true` vào điểm phụ thuộc.
+  Timestamp nến/evaluated_at là UTC milliseconds; fetched_at vẫn là UTC ISO 8601.
+- `source`, `stale`, `warning`, `fetched_at`, `cache_key` giữ từ snapshot nguồn.
+  `stale` và `provisional` độc lập; tính lại không làm dữ liệu cũ trở thành mới.
+- Snapshot sai trả 502 `invalid_indicator_data`; lỗi Binance/Redis giữ hành vi cũ.
+  EMA/RSI khởi tạo lại từ đầu snapshot, nên đổi limit có thể làm kết quả khác.
+
+`fetched_at` là thời điểm backend nhận dữ liệu, không phải thời điểm Binance chụp
+giá. Quy tắc lọc không bảo đảm tuyệt đối giá cuối cùng khi HTTP đi qua giờ đóng nến
+hoặc đồng hồ lệch. API không tự fetch lại để xác minh trong trường hợp này.
+
+Chỉ yêu cầu các cặp cần dùng: tối đa 2997 cặp × 1000 nến tạo gần 3 triệu điểm.
+Benchmark mock trên máy phát triển ghi nhận khoảng 11,52 giây, 357,6 MB response
+và 2,96 GB peak RSS; đây không phải SLA hoặc kiểm thử tải production.
+Phép tính đồng bộ có thể chiếm worker trong thời gian này.
+
+Xem [hợp đồng API](specs/001-calculate-indicators/contracts/indicators-api.md) và
+[kết quả nghiệm thu](specs/001-calculate-indicators/quickstart.md).
+Chưa có rule engine, gửi cảnh báo, CLI chỉ báo hoặc tích hợp frontend chỉ báo.
 
 ## Redis và xử lý lỗi
 
@@ -219,7 +263,9 @@ Kiểm thử thủ công với Redis thật dùng CLI hoặc các request ở tr
 
 Đã kiểm thử thực tế Binance Spot với 300 nến BTCUSDT cho từng khung `1h`, `1d`,
 `1w`, xác nhận Redis TTL 60 giây và request lần hai trả cache. CLI Futures cũng
-đã được kiểm thử với endpoint public thật. Bộ test tự động có 17 trường hợp pass.
+đã được kiểm thử với endpoint public thật trong giai đoạn market data trước đây.
+Bộ test hiện có 134 trường hợp pass, gồm 17 trường hợp market data cũ và 117
+trường hợp chỉ báo/API mới; lần bổ sung chỉ báo dùng mock hoàn toàn.
 
 ## Cấu trúc
 
@@ -236,12 +282,16 @@ BE/
     main.py               FastAPI và vòng đời HTTP/Redis connections
     config.py             Cấu hình .env
     models.py             Candle và response schema
+    indicator_models.py   Schema yêu cầu và kết quả chỉ báo
+    indicators.py         Bộ tính Decimal, validation và chính sách nến
     errors.py             Lỗi Binance/Redis
     cli.py                Fetch một lần và lưu Redis
     binance/client.py     Binance REST, retry và cooldown
     cache/redis_cache.py  Redis JSON và TTL
     service.py            Cache hit/miss và stale fallback
   tests/test_market_data.py
+  tests/test_indicators.py
+  tests/test_indicators_api.py
   pyproject.toml          Dependency và cấu hình Python
   requirements.lock.txt   Phiên bản dependency
   Dockerfile              Build backend trong Docker
@@ -251,8 +301,9 @@ compose.yaml              Khởi động backend và Redis
 HUONG_DAN_CHAY.md          Hướng dẫn chạy và cấu hình .env
 ```
 
-V1 này hoàn thiện bước Binance → Redis. Indicator SMA/EMA/RSI, rule engine,
-SQL lưu rules/alerts và kết nối frontend với đầy đủ API thật sẽ được thêm ở các bước tiếp theo.
+Đã có luồng Binance → Redis và API tính SMA/EMA/RSI Wilder theo yêu cầu.
+Rule engine, gửi cảnh báo, SQL lưu rules/alerts và kết nối frontend với đầy đủ
+API thật vẫn thuộc các bước phát triển tiếp theo.
 
 Tài liệu tham khảo:
 

@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 import httpx
 from fastapi import FastAPI, Query, Request
@@ -10,6 +11,8 @@ from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import Settings, get_settings
 from app.errors import BinanceError, CacheError
+from app.indicator_models import IndicatorRequest, IndicatorsResult
+from app.indicators import IndicatorDataError, calculate_indicators, utc_milliseconds
 from app.models import Interval, KlinesResult, SymbolsResult
 from app.service import MarketDataService
 
@@ -61,6 +64,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         limit: int = Query(default=300, ge=1, le=1000),
     ):
         return await request.app.state.service.klines(symbol, interval, limit)
+
+    @app.post("/indicators", response_model=IndicatorsResult)
+    async def indicators(body: IndicatorRequest, request: Request):
+        snapshot = await request.app.state.service.klines(body.symbol, body.interval, body.limit)
+        evaluated_at = utc_milliseconds(datetime.now(UTC))
+        try:
+            return calculate_indicators(snapshot, body, evaluated_at, settings.binance_market)
+        except IndicatorDataError as exc:
+            return JSONResponse(
+                status_code=502,
+                content={"detail": {"code": "invalid_indicator_data", "message": str(exc)}},
+            )
 
     @app.get("/symbols", response_model=SymbolsResult)
     async def symbols(request: Request):
