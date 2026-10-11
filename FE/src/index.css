@@ -108,6 +108,7 @@ h1 { font-size: clamp(25px, 3vw, 32px); line-height: 1.2; margin: 0; font-weight
 .heading-action { width: auto; flex-shrink: 0; }
 .main-grid { display: grid; grid-template-columns: minmax(0, 1fr) 408px; gap: 24px; align-items: start; }
 .market-workspace, .sidebar-panels { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.sidebar-item { min-width: 0; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: 0 3px 12px #20384504; min-width: 0; }
 .card-title { font-size: 16px; line-height: 1.4; font-weight: 650; margin: 0; display: flex; align-items: center; gap: 9px; letter-spacing: -.25px; }
 .section-heading { display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
@@ -206,7 +207,7 @@ input::placeholder { color: var(--muted); }
   .topbar-actions { gap: 8px; } .theme-toggle { width: 40px; min-height: 42px; padding: 0; } .theme-toggle span { display: none; }
   .topbar { min-height: 78px; gap: 10px; } .brand { gap: 8px; } .brand-mark { width: 34px; height: 34px; border-radius: 10px; } .brand-name { font-size: 15px; } .brand-caption { display: none; } .pill { padding: 5px 8px; font-size: 10px; gap: 5px; }
   .page-heading { padding: 24px 0 20px; align-items: flex-start; gap: 12px; flex-direction: column; } .eyebrow { font-size: 9px; } h1 { font-size: 27px; } .subtitle { font-size: 12px; max-width: 320px; } .heading-action { min-height: 42px; padding: 9px 13px; font-size: 12px; }
-  .main-grid, .market-workspace, .sidebar-panels { gap: 16px; } .sidebar-panels { display: flex; }
+  .main-grid, .market-workspace, .sidebar-panels { gap: 16px; } .sidebar-panels { display: flex; align-items: stretch; }
   .card { padding: 18px; border-radius: 12px; } .chart-panel { padding: 0; } .chart-header { padding: 14px; gap: 10px; } .chart-title-group { gap: 8px; } .chart-title-group .card-title { font-size: 14px; } .asset-icon { width: 32px; height: 32px; font-size: 16px; }
   .timeframe-tabs button { min-width: 34px; min-height: 38px; } .chart-body { height: 355px; } .chart-foot { padding: 9px 14px; }
   .indicator-heading { flex-wrap: wrap; } .indicator-heading .section-description { max-width: 190px; } .indicator-heading .tv-link-btn { min-height: 42px; }
