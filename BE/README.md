@@ -11,6 +11,8 @@ BE/
     binance/client.py     Binance REST client
     cache/redis_cache.py  Cache Redis
     service.py            Luồng cache và fetch
+    indicator_models.py   Schema API chỉ báo
+    indicators.py         Bộ tính SMA/EMA/RSI Wilder bằng Decimal
   tests/                  Test tự động
   pyproject.toml          Dependency và cấu hình Python
   requirements.lock.txt   Phiên bản dependency đã kiểm thử
@@ -49,3 +51,32 @@ Kiểm thử tại thư mục gốc:
 
 Xem [hướng dẫn chạy và cấu hình .env](../HUONG_DAN_CHAY.md) để biết cách thử API,
 dùng CLI và xử lý lỗi.
+
+## API chỉ báo
+
+`POST /indicators` nhận danh sách cặp tên–chu kỳ, ví dụ:
+
+```json
+{"indicators":[{"name":"sma","period":20},{"name":"sma","period":50},{"name":"ema"},{"name":"rsi"}]}
+```
+
+Body này dùng BTCUSDT/1h/300 nến; period mặc định 14. Chu kỳ phải nguyên 1–999;
+cặp trùng hoặc body sai trả 422. SMA/EMA cần N nến, RSI Wilder cần N+1;
+thiếu dữ liệu trả 200 với `null`/`insufficient_data` riêng từng cặp.
+
+Mặc định lọc nến đóng theo cả thời điểm đánh giá và fetch. Bật `include_open=true`
+để dùng nến mở với cờ `provisional`. Kết quả giữ metadata stale của snapshot,
+không ghi cache chỉ báo hoặc fetch bù. `fetched_at` không chứng minh tuyệt đối
+giá cuối tại ranh giới đóng nến. Yêu cầu nhiều cặp có thể chiếm worker và bộ nhớ lớn;
+xem benchmark và giới hạn trong [hướng dẫn nghiệm thu](../specs/001-calculate-indicators/quickstart.md).
+
+Test riêng chỉ báo tại gốc repository:
+
+```sh
+.venv/bin/python -m pytest BE/tests/test_indicators.py BE/tests/test_indicators_api.py -q
+```
+
+Trên Windows dùng `.venv/Scripts/python.exe`. Test dùng fixture, HTTP mock và
+fakeredis, không cần Redis/Binance thật. [Hợp đồng đầy đủ](../specs/001-calculate-indicators/contracts/indicators-api.md)
+mô tả schema, lỗi và defaults. CLI market data giữ nguyên; chưa có CLI/UI chỉ báo,
+rule engine hoặc gửi cảnh báo.
