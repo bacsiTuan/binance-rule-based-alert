@@ -1,4 +1,5 @@
 import { MOCK_RULES } from "./mockData.js";
+import { LocalizedError } from "../i18n.js";
 
 // Rules remain browser-local until the backend provides rule CRUD and an engine.
 const STORE_KEY = "indicator_alert_rules";
@@ -8,7 +9,7 @@ function loadRules(mock) {
   const saved = localStorage.getItem(mock ? MOCK_STORE_KEY : STORE_KEY);
   if (saved) {
     const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed)) throw new Error("Dữ liệu luật trong trình duyệt không hợp lệ.");
+    if (!Array.isArray(parsed)) throw new LocalizedError("Dữ liệu luật trong trình duyệt không hợp lệ.");
     return parsed;
   }
   return mock ? structuredClone(MOCK_RULES) : [];
@@ -34,7 +35,7 @@ export function createLocalRules(mock = false) {
     async updateRule(id, patch) {
       const rules = loadRules(mock);
       const rule = rules.find((item) => item.id === id);
-      if (!rule) throw new Error("Không tìm thấy luật trong trình duyệt.");
+      if (!rule) throw new LocalizedError("Không tìm thấy luật trong trình duyệt.");
       const updated = { ...rule, ...patch };
       save(rules.map((item) => item.id === id ? updated : item));
       return updated;

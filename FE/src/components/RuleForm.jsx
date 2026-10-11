@@ -1,3 +1,4 @@
+import { useLanguage } from "../LanguageContext.jsx";
 import { cloneElement, useEffect, useMemo, useState } from "react";
 import {
   CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TARGET_INDICATORS, TEMPLATES, TIMEFRAMES, MAX_LENGTH,
@@ -29,6 +30,7 @@ export default function RuleForm({
   onTimeframeChange,
   onIndicatorRequestChange,
 }) {
+  const { t, language, localizedError } = useLanguage();
   const [form, setForm] = useState(initialForm);
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +64,7 @@ export default function RuleForm({
     }
   }, [symbols]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const errors = useMemo(() => validateForm(form), [form]);
+  const errors = useMemo(() => validateForm(form, language), [form, language]);
   const hasErrors = Object.keys(errors).length > 0;
   const shown = touched ? errors : {};
 
@@ -75,13 +77,13 @@ export default function RuleForm({
   };
 
   const applyTemplate = (id) => {
-    const t = TEMPLATES.find((x) => x.id === id);
-    if (!t) return;
+    const template = TEMPLATES.find((x) => x.id === id);
+    if (!template) return;
     setForm((f) => ({
       ...f,
-      left: { ...t.left },
-      operator: t.operator,
-      target: { ...f.target, ...t.target },
+      left: { ...template.left },
+      operator: template.operator,
+      target: { ...f.target, ...template.target },
     }));
     setTouched(false);
     setServerError("");
@@ -102,7 +104,7 @@ export default function RuleForm({
       await onSubmit(buildPayload(form));
       setSaved(true);
     } catch (err) {
-      setServerError(err.message || "Không thể tạo luật.");
+      setServerError(err);
     } finally {
       setSubmitting(false);
     }
@@ -125,26 +127,26 @@ export default function RuleForm({
   return (
     <form id="rule-form" className="card rule-form" onSubmit={handleSubmit} noValidate aria-labelledby="form-title">
       <div className="section-heading"><span className="section-icon"><Icon name="plus" size={19} /></span>
-        <div><h2 id="form-title" className="card-title">Tạo luật mới</h2><p className="section-description">Bắt đầu với một điều kiện bạn muốn theo dõi.</p></div></div>
+        <div><h2 id="form-title" className="card-title">{t("Tạo luật mới")}</h2><p className="section-description">{t("Bắt đầu với một điều kiện bạn muốn theo dõi.")}</p></div></div>
 
-      <Field id="template" label="Bắt đầu từ luật mẫu">
+      <Field id="template" label={t("Bắt đầu từ luật mẫu")}>
         <select id="template" defaultValue="" onChange={(e) => applyTemplate(e.target.value)}>
-          <option value="">— Chọn luật mẫu —</option>
-          {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          <option value="">{t("— Chọn luật mẫu —")}</option>
+          {TEMPLATES.map((item) => <option key={item.id} value={item.id}>{t(item.name)}</option>)}
         </select>
       </Field>
 
-      <div className="form-step"><span>01</span> Chọn thị trường</div>
-      <Field id="symbol-search" label="Tìm cặp giao dịch">
+      <div className="form-step"><span>01</span> {t("Chọn thị trường")}</div>
+      <Field id="symbol-search" label={t("Tìm cặp giao dịch")}>
         <div className="search-field"><Icon name="search" size={17} /><input id="symbol-search" type="search"
-          placeholder="Tìm BTC, ETH, SOL…" value={symbolSearch}
+          placeholder={t("Tìm BTC, ETH, SOL…")} value={symbolSearch}
           onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
           onChange={(event) => setSymbolSearch(event.target.value)} /></div>
-        {symbolSearch && <p className="field-hint" role="status">{filteredSymbols.length ? `${filteredSymbols.length} cặp phù hợp` : "Không tìm thấy cặp phù hợp. Cặp đang chọn được giữ lại."}</p>}
+        {symbolSearch && <p className="field-hint" role="status">{filteredSymbols.length ? t("{count} cặp phù hợp", { count: filteredSymbols.length }) : t("Không tìm thấy cặp phù hợp. Cặp đang chọn được giữ lại.")}</p>}
       </Field>
 
       <div className="row">
-        <Field id="symbol" label="Cặp giao dịch" error={shown.symbol}>
+        <Field id="symbol" label={t("Cặp giao dịch")} error={shown.symbol}>
           <select
             id="symbol"
             value={form.symbol}
@@ -154,11 +156,11 @@ export default function RuleForm({
               if (onSymbolChange) onSymbolChange(val);
             }}
           >
-            {symbols.length === 0 && <option value="">Đang tải…</option>}
+            {symbols.length === 0 && <option value="">{t("Đang tải…")}</option>}
             {visibleSymbols.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </Field>
-        <Field id="timeframe" label="Khung thời gian">
+        <Field id="timeframe" label={t("Khung thời gian")}>
           <select
             id="timeframe"
             value={form.timeframe}
@@ -168,22 +170,22 @@ export default function RuleForm({
               if (onTimeframeChange) onTimeframeChange(val);
             }}
           >
-            {TIMEFRAMES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {TIMEFRAMES.map((item) => <option key={item.value} value={item.value}>{t(item.label)}</option>)}
           </select>
         </Field>
       </div>
 
       <fieldset className="group">
-        <legend><span className="step-number">02</span> Thiết lập điều kiện</legend>
+        <legend><span className="step-number">02</span> {t("Thiết lập điều kiện")}</legend>
 
         <div className="row">
-          <Field id="left-type" label="Chỉ báo cần theo dõi">
+          <Field id="left-type" label={t("Chỉ báo cần theo dõi")}>
             <select id="left-type" value={form.left.type} onChange={(e) => onLeftTypeChange(e.target.value)}>
-              {LEFT_INDICATORS.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
+              {LEFT_INDICATORS.map((i) => <option key={i.value} value={i.value}>{t(i.label)}</option>)}
             </select>
           </Field>
           {leftDef?.hasLength && (
-            <Field id="left-length" label="Chu kỳ (số nến)" error={shown.leftLength}>
+            <Field id="left-length" label={t("Chu kỳ (số nến)")} error={shown.leftLength}>
               <input
                 id="left-length" type="number" min="1" max={MAX_LENGTH} inputMode="numeric"
                 value={form.left.length} onChange={(e) => setLeft({ length: e.target.value })}
@@ -192,16 +194,16 @@ export default function RuleForm({
           )}
         </div>
 
-        <Field id="operator" label="Điều kiện so sánh" hint={opDef?.hint}>
+        <Field id="operator" label={t("Điều kiện so sánh")} hint={t(opDef?.hint)}>
           <select id="operator" value={form.operator} onChange={(e) => setForm({ ...form, operator: e.target.value })}>
-            {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {OPERATORS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
           </select>
         </Field>
 
         <div className="field">
-          <span className="label" id="target-label">So sánh với</span>
+          <span className="label" id="target-label">{t("So sánh với")}</span>
           <div className="segmented" role="group" aria-labelledby="target-label">
-            {[["value", "Giá trị"], ["indicator", "Chỉ báo"]].map(([mode, text]) => (
+            {[["value", t("Giá trị")], ["indicator", t("Chỉ báo")]].map(([mode, text]) => (
               <button
                 key={mode} type="button" aria-pressed={form.target.mode === mode}
                 className={form.target.mode === mode ? "seg active" : "seg"}
@@ -214,8 +216,8 @@ export default function RuleForm({
         </div>
 
         {form.target.mode === "value" ? (
-          <Field id="target-value" label="Giá trị" error={shown.targetValue}
-            hint={form.left.type === "rsi" ? "RSI nằm trong khoảng 0–100." : undefined}>
+          <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
+            hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
             <input
               id="target-value" type="number" step="any" inputMode="decimal"
               value={form.target.value} onChange={(e) => setTarget({ value: e.target.value })}
@@ -223,12 +225,12 @@ export default function RuleForm({
           </Field>
         ) : (
           <div className="row">
-            <Field id="target-type" label="Chỉ báo đích">
+            <Field id="target-type" label={t("Chỉ báo đích")}>
               <select id="target-type" value={form.target.type} onChange={(e) => setTarget({ type: e.target.value })}>
-                {TARGET_INDICATORS.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
+                {TARGET_INDICATORS.map((i) => <option key={i.value} value={i.value}>{t(i.label)}</option>)}
               </select>
             </Field>
-            <Field id="target-length" label="Chu kỳ (số nến)" error={shown.targetLength}>
+            <Field id="target-length" label={t("Chu kỳ (số nến)")} error={shown.targetLength}>
               <input
                 id="target-length" type="number" min="1" max={MAX_LENGTH} inputMode="numeric"
                 value={form.target.length} onChange={(e) => setTarget({ length: e.target.value })}
@@ -238,28 +240,28 @@ export default function RuleForm({
         )}
       </fieldset>
 
-      <div className="form-step"><span>03</span> Chọn dữ liệu nến</div>
+      <div className="form-step"><span>03</span> {t("Chọn dữ liệu nến")}</div>
 
-      <Field id="candle-mode" label="Chế độ nến" hint={modeDef?.hint}>
+      <Field id="candle-mode" label={t("Chế độ nến")} hint={t(modeDef?.hint)}>
         <select id="candle-mode" value={form.candleMode} onChange={(e) => setForm({ ...form, candleMode: e.target.value })}>
-          {CANDLE_MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+          {CANDLE_MODES.map((m) => <option key={m.value} value={m.value}>{t(m.label)}</option>)}
         </select>
       </Field>
 
       <div className="preview" aria-live="polite">
-        <span className="preview-label">Xem trước</span>
+        <span className="preview-label">{t("Xem trước")}</span>
         <p className="preview-text">
-          {hasErrors ? "Hoàn tất các trường để xem mô tả luật." : describeRule(payload)}
+          {hasErrors ? t("Hoàn tất các trường để xem mô tả luật.") : describeRule(payload, language)}
         </p>
       </div>
 
-      {serverError && <p className="banner error" role="alert">{serverError}</p>}
-      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> Đã lưu luật. Bạn có thể xem trong danh sách bên dưới.</p>}
+      {serverError && <p className="banner error" role="alert">{localizedError(serverError) || t("Không thể tạo luật.")}</p>}
+      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {t("Đã lưu luật. Bạn có thể xem trong danh sách bên dưới.")}</p>}
 
       <button id="submit-rule" className="btn primary" type="submit" disabled={submitting || !symbols.length}>
-        <Icon name="plus" size={18} />{submitting ? "Đang lưu…" : "Lưu luật"}
+        <Icon name="plus" size={18} />{submitting ? t("Đang lưu…") : t("Lưu luật")}
       </button>
-      <p className="local-note">Lưu trên trình duyệt này · Chưa gửi cảnh báo tự động</p>
+      <p className="local-note">{t("Lưu trên trình duyệt này · Chưa gửi cảnh báo tự động")}</p>
     </form>
   );
 }

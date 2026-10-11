@@ -1,3 +1,5 @@
+import { BackendError, LocalizedError } from "../i18n.js";
+
 // Injectable fetch keeps the HTTP contract testable without a running backend.
 export function createMarketApi({ base = "/api", fetcher = globalThis.fetch } = {}) {
   async function request(path, options = {}) {
@@ -6,21 +8,20 @@ export function createMarketApi({ base = "/api", fetcher = globalThis.fetch } = 
       response = await fetcher(`${base}${path}`, options);
     } catch (error) {
       if (error.name === "AbortError") throw error;
-      throw new Error("Không kết nối được backend. Kiểm tra BE và cấu hình VITE_API_TARGET.");
+      throw new LocalizedError("Không kết nối được backend. Kiểm tra BE và cấu hình VITE_API_TARGET.");
     }
     let body;
     try {
       body = await response.json();
     } catch {
-      throw new Error(`Backend trả dữ liệu không hợp lệ (HTTP ${response.status}).`);
+      throw new LocalizedError("Backend trả dữ liệu không hợp lệ (HTTP {status}).", { status: response.status });
     }
     if (!response.ok) {
       const detail = body.detail;
       const message = typeof detail === "string" ? detail
         : Array.isArray(detail) ? detail.map((item) => item.msg).join("; ")
-        : detail?.message || `Lỗi HTTP ${response.status}`;
-      const retry = body.retry_after ? ` Thử lại sau ${body.retry_after} giây.` : "";
-      throw new Error(message + retry);
+        : detail?.message || `HTTP error ${response.status}`;
+      throw new BackendError(message, body.retry_after);
     }
     return body;
   }

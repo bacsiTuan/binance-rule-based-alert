@@ -8,6 +8,11 @@ Giao diện mặc định dùng nền tối. Nút **Sáng/Tối** ở thanh trê
 và đồng bộ nền biểu đồ TradingView; lựa chọn được nhớ trên trình duyệt này.
 Bố cục dùng toàn bộ chiều rộng cửa sổ, chừa lề nhỏ và tự xếp lại trên điện thoại.
 
+Website hỗ trợ **English / Tiếng Việt**, mặc định **English**. Chọn **EN / VI**
+ở thanh trên để đổi ngôn ngữ; lựa chọn được nhớ trên trình duyệt này. Nhãn,
+luật mẫu, mô tả luật, lỗi form, thông báo và ngày giờ thay đổi theo ngôn ngữ.
+TradingView cũng đổi ngôn ngữ tương ứng. Đổi ngôn ngữ giữ nguyên dữ liệu form và luật đã lưu.
+
 ## Chạy frontend
 
 Cần Node.js và npm. Mở terminal tại thư mục `FE/`:
@@ -87,7 +92,7 @@ bảng bên cạnh được tính bởi BE, có thể khác widget do snapshot/c
 Giao diện hỗ trợ nền tối/sáng và giữ màu nút xanh ngọc, tự chuyển bố cục theo màn hình.
 Ô **Tìm cặp giao dịch** lọc danh sách theo mã (BTC/ETH/SOL…), không tự đổi cặp đang chọn.
 Nút **1H / 1D / 1W** trên biểu đồ đồng bộ khung thời gian với form và chỉ báo.
-Form có nhãn tiếng Việt, trạng thái lỗi, thông báo lưu thành công và hỗ trợ bàn phím.
+Form có nhãn Anh/Việt, trạng thái lỗi, thông báo lưu thành công và hỗ trợ bàn phím.
 TradingView hiển thị trạng thái đang tải; nếu không tải được sau 12 giây, có nút
 thử lại và mở TradingView trực tiếp. Lỗi biểu đồ không ngăn FE lấy chỉ báo từ BE.
 

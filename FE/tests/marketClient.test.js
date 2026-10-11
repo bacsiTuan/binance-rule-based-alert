@@ -52,7 +52,7 @@ test("FastAPI string, validation list, object errors and cooldown produce readab
     [{ detail: "Redis unavailable" }, 503, "Redis unavailable"],
     [{ detail: [{ msg: "Invalid interval" }] }, 422, "Invalid interval"],
     [{ detail: { code: "invalid_indicator_data", message: "Bad candle order" } }, 502, "Bad candle order"],
-    [{ detail: "Rate limited", retry_after: 60 }, 429, "Rate limited Thử lại sau 60 giây."],
+    [{ detail: "Rate limited", retry_after: 60 }, 429, "Rate limited Try again in 60 seconds."],
   ]) {
     const api = createMarketApi({ fetcher: async () => Response.json(body, { status }) });
     await assert.rejects(api.getSymbols(), { message });
@@ -61,7 +61,7 @@ test("FastAPI string, validation list, object errors and cooldown produce readab
 
 test("offline, invalid JSON and cancellation do not become misleading indicator results", async () => {
   const offline = createMarketApi({ fetcher: async () => { throw new TypeError("fetch failed"); } });
-  await assert.rejects(offline.getSymbols(), /Không kết nối được backend/);
+  await assert.rejects(offline.getSymbols(), /Unable to connect to the backend/);
   const html = createMarketApi({ fetcher: async () => new Response("<html>proxy failed</html>", { status: 502 }) });
   await assert.rejects(html.getSymbols(), /HTTP 502/);
   const abort = new DOMException("Aborted", "AbortError");

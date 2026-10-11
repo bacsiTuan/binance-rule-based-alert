@@ -1,7 +1,9 @@
+import { useLanguage } from "../LanguageContext.jsx";
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon.jsx";
 
 export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d", theme = "dark" }) {
+  const { t, language } = useLanguage();
   const containerRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [attempt, setAttempt] = useState(0);
@@ -59,7 +61,7 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d",
       timezone: "Asia/Ho_Chi_Minh",
       theme,
       style: "1",
-      locale: "vi_VN",
+      locale: language === "vi" ? "vi_VN" : "en",
       enable_publishing: false,
       allow_symbol_change: false,
       calendar: false,
@@ -79,7 +81,7 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d",
       for (const frame of observedFrames) frame.removeEventListener("load", onReady);
       container.replaceChildren();
     };
-  }, [symbol, interval, theme, attempt]);
+  }, [symbol, interval, theme, language, attempt]);
 
   return (
     <div className="chart-wrapper">
@@ -90,10 +92,10 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d",
       />
       {status !== "ready" && <div className="chart-placeholder" role="status">
         <span className="chart-placeholder-icon"><Icon name="chart" size={30} /></span>
-        <strong>{status === "loading" ? "Đang tải biểu đồ…" : "Chưa tải được biểu đồ"}</strong>
-        <p>{status === "loading" ? "Biểu đồ giá được cung cấp bởi TradingView." : "Kiểm tra kết nối mạng hoặc mở TradingView để xem biểu đồ."}</p>
-        {status === "error" && <div className="chart-placeholder-actions"><button className="tv-link-btn" type="button" onClick={() => setAttempt(value => value + 1)}><Icon name="refresh" size={16} />Thử lại</button>
-          <a className="tv-link-btn" href={`https://www.tradingview.com/chart/?symbol=BINANCE%3A${encodeURIComponent(symbol)}`} target="_blank" rel="noopener noreferrer">Mở TradingView <Icon name="arrow" size={16} /></a></div>}
+        <strong>{status === "loading" ? t("Đang tải biểu đồ…") : t("Chưa tải được biểu đồ")}</strong>
+        <p>{status === "loading" ? t("Biểu đồ giá được cung cấp bởi TradingView.") : t("Kiểm tra kết nối mạng hoặc mở TradingView để xem biểu đồ.")}</p>
+        {status === "error" && <div className="chart-placeholder-actions"><button className="tv-link-btn" type="button" onClick={() => setAttempt(value => value + 1)}><Icon name="refresh" size={16} />{t("Thử lại")}</button>
+          <a className="tv-link-btn" href={`https://${language === "vi" ? "vn" : "www"}.tradingview.com/chart/?symbol=BINANCE%3A${encodeURIComponent(symbol)}`} target="_blank" rel="noopener noreferrer">{t("Mở TradingView")} <Icon name="arrow" size={16} /></a></div>}
       </div>}
     </div>
   );
