@@ -2,7 +2,7 @@ services:
   api:
     build: ./BE
     ports:
-      - "127.0.0.1:${API_PORT:-8000}:8000"
+      - "127.0.0.1:${API_PORT:-8005}:8005"
     environment:
       # Local Redis on the host machine (compose redis service is commented out).
       REDIS_URL: redis://host.docker.internal:6379/0
