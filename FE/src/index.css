@@ -84,6 +84,9 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 :where(a, button, input, select, summary):focus-visible { outline: 3px solid #5aaea4; outline-offset: 3px; }
 .app-container { width: 100%; padding: 0 28px 28px; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
+.language-switch { display: inline-flex; flex-shrink: 0; padding: 3px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.language-switch button { border: 0; border-radius: 5px; min-width: 34px; min-height: 32px; padding: 4px 6px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 650; }
+.language-switch button[aria-pressed='true'] { color: var(--accent-text); background: var(--surface); }
 .theme-toggle { min-height: 40px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 92px; border-bottom: 1px solid var(--border); }
 .brand { display: flex; align-items: center; gap: 12px; }
@@ -204,8 +207,8 @@ input::placeholder { color: var(--muted); }
 @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .sidebar-panels { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; gap: 18px; } .chart-body { height: 410px; } .main-nav { display: none; } }
 @media (max-width: 640px) {
   body { font-size: 14px; } .app-container { padding: 0 14px 20px; }
-  .topbar-actions { gap: 8px; } .theme-toggle { width: 40px; min-height: 42px; padding: 0; } .theme-toggle span { display: none; }
-  .topbar { min-height: 78px; gap: 10px; } .brand { gap: 8px; } .brand-mark { width: 34px; height: 34px; border-radius: 10px; } .brand-name { font-size: 15px; } .brand-caption { display: none; } .pill { padding: 5px 8px; font-size: 10px; gap: 5px; }
+  .topbar-actions { gap: 8px; width: 100%; justify-content: flex-end; } .topbar-actions .pill { margin-right: auto; order: -1; } .language-switch button { min-height: 36px; } .theme-toggle { width: 40px; min-height: 42px; padding: 0; } .theme-toggle span { display: none; }
+  .topbar { min-height: 78px; gap: 10px; flex-wrap: wrap; padding: 12px 0; } .brand { gap: 8px; } .brand-mark { width: 34px; height: 34px; border-radius: 10px; } .brand-name { font-size: 15px; } .brand-caption { display: none; } .pill { padding: 5px 8px; font-size: 10px; gap: 5px; }
   .page-heading { padding: 24px 0 20px; align-items: flex-start; gap: 12px; flex-direction: column; } .eyebrow { font-size: 9px; } h1 { font-size: 27px; } .subtitle { font-size: 12px; max-width: 320px; } .heading-action { min-height: 42px; padding: 9px 13px; font-size: 12px; }
   .main-grid, .market-workspace, .sidebar-panels { gap: 16px; } .sidebar-panels { display: flex; align-items: stretch; }
   .card { padding: 18px; border-radius: 12px; } .chart-panel { padding: 0; } .chart-header { padding: 14px; gap: 10px; } .chart-title-group { gap: 8px; } .chart-title-group .card-title { font-size: 14px; } .asset-icon { width: 32px; height: 32px; font-size: 16px; }

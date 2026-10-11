@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi" data-theme="dark">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,12 +8,16 @@
         const savedTheme = localStorage.getItem("indicator_alert_theme");
         if (savedTheme === "light" || savedTheme === "dark") document.documentElement.dataset.theme = savedTheme;
       } catch { /* Mặc định dark khi trình duyệt chặn lưu trữ. */ }
+      try {
+        const savedLanguage = localStorage.getItem("indicator_alert_language");
+        if (savedLanguage === "vi") document.documentElement.lang = "vi";
+      } catch { /* English is the default when storage is unavailable. */ }
     </script>
     <meta
       name="description"
-      content="Tạo và quản lý luật cảnh báo chỉ báo kỹ thuật (SMA, EMA, RSI) cho dữ liệu thị trường Binance."
+      content="Create and manage technical indicator alert rules (SMA, EMA, RSI) for Binance market data."
     />
-    <title>Indicator Alert – Cảnh báo chỉ báo Binance</title>
+    <title>Indicator Alert – Binance indicator alerts</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

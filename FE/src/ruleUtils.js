@@ -1,4 +1,5 @@
 import { MAX_LENGTH, OPERATORS } from "./constants.js";
+import { translate } from "./i18n.js";
 
 export const initialForm = {
   symbol: "BTCUSDT",
@@ -11,37 +12,38 @@ export const initialForm = {
 
 const isInt = (v) => Number.isInteger(Number(v)) && String(v).trim() !== "";
 
-function validateLength(length, label, errors, key) {
+function validateLength(length, label, errors, key, language) {
   if (!isInt(length) || Number(length) < 1 || Number(length) > MAX_LENGTH) {
-    errors[key] = `${label}: chu kỳ phải là số nguyên từ 1 đến ${MAX_LENGTH}.`;
+    errors[key] = translate("{label}: chu kỳ phải là số nguyên từ 1 đến {max}.", language,
+      { label: translate(label, language), max: MAX_LENGTH });
   }
 }
 
 // Trả về object lỗi theo từng trường; rỗng nghĩa là hợp lệ.
-export function validateForm(form) {
+export function validateForm(form, language = "en") {
   const errors = {};
-  if (!form.symbol) errors.symbol = "Hãy chọn symbol.";
+  if (!form.symbol) errors.symbol = translate("Hãy chọn symbol.", language);
 
   if (form.left.type !== "close") {
-    validateLength(form.left.length, "Chỉ báo", errors, "leftLength");
+    validateLength(form.left.length, "Chỉ báo", errors, "leftLength", language);
   }
 
   if (form.target.mode === "value") {
     const raw = form.target.value;
     if (raw === "" || raw === null || !Number.isFinite(Number(raw))) {
-      errors.targetValue = "Hãy nhập một con số.";
+      errors.targetValue = translate("Hãy nhập một con số.", language);
     } else if (form.left.type === "rsi" && (Number(raw) < 0 || Number(raw) > 100)) {
-      errors.targetValue = "RSI luôn nằm trong khoảng 0–100.";
+      errors.targetValue = translate("RSI luôn nằm trong khoảng 0–100.", language);
     }
   } else {
-    validateLength(form.target.length, "Chỉ báo đích", errors, "targetLength");
+    validateLength(form.target.length, "Chỉ báo đích", errors, "targetLength", language);
     if (
       !errors.targetLength &&
       !errors.leftLength &&
       form.left.type === form.target.type &&
       Number(form.left.length) === Number(form.target.length)
     ) {
-      errors.targetLength = "Hai vế giống hệt nhau nên luật không bao giờ kích hoạt.";
+      errors.targetLength = translate("Hai vế giống hệt nhau nên luật không bao giờ kích hoạt.", language);
     }
   }
   return errors;
@@ -69,13 +71,13 @@ export function buildPayload(form) {
   };
 }
 
-const indicatorText = (i) =>
-  i.type === "close" ? "Giá" : `${i.type.toUpperCase()}(${i.length})`;
+const indicatorText = (i, language) =>
+  i.type === "close" ? translate("Giá", language) : `${i.type.toUpperCase()}(${i.length})`;
 
 // Mô tả luật bằng chữ dễ đọc, ví dụ "BTCUSDT · 1D · RSI(14) cắt lên 30".
-export function describeRule(rule) {
+export function describeRule(rule, language = "en") {
   const op = OPERATORS.find((o) => o.value === rule.operator);
-  const opText = op ? op.label.split(" (")[0].toLowerCase() : rule.operator;
-  const target = typeof rule.target === "number" ? rule.target : indicatorText(rule.target);
-  return `${rule.symbol} · ${rule.timeframe.toUpperCase()} · ${indicatorText(rule.indicator)} ${opText} ${target}`;
+  const opText = op ? translate(op.label.split(" (")[0], language).toLowerCase() : rule.operator;
+  const target = typeof rule.target === "number" ? rule.target : indicatorText(rule.target, language);
+  return `${rule.symbol} · ${rule.timeframe.toUpperCase()} · ${indicatorText(rule.indicator, language)} ${opText} ${target}`;
 }
