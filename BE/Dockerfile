@@ -10,6 +10,6 @@ RUN python -m pip install --no-cache-dir . -c requirements.lock.txt
 RUN useradd --create-home --uid 10001 appuser
 USER appuser
 
-EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-# python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+EXPOSE 8005
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8005"]
+# python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8005
