@@ -1,10 +1,30 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import Icon from "./Icon.jsx";
 
-export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d" }) {
+export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d", theme = "dark" }) {
   const containerRef = useRef(null);
+  const [status, setStatus] = useState("loading");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
+    const container = containerRef.current;
+    let active = true;
+    setStatus("loading");
+    const timer = setTimeout(() => { if (active) setStatus("error"); }, 12000);
+    const observedFrames = new Set();
+    const onReady = () => {
+      if (active) { clearTimeout(timer); setStatus("ready"); }
+    };
+    const observer = new MutationObserver(() => {
+      for (const frame of container.querySelectorAll("iframe")) {
+        if (!observedFrames.has(frame)) {
+          observedFrames.add(frame);
+          frame.addEventListener("load", onReady);
+        }
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true });
 
     // Làm sạch widget cũ trước khi tạo widget mới
     containerRef.current.innerHTML = "";
@@ -31,16 +51,17 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d" 
       "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.type = "text/javascript";
     script.async = true;
+    script.onerror = () => { if (active) { clearTimeout(timer); setStatus("error"); } };
     script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: formattedSymbol,
       interval: tvInterval,
       timezone: "Asia/Ho_Chi_Minh",
-      theme: "dark",
+      theme,
       style: "1",
       locale: "vi_VN",
       enable_publishing: false,
-      allow_symbol_change: true,
+      allow_symbol_change: false,
       calendar: false,
       hide_side_toolbar: false,
       studies: [
@@ -51,7 +72,14 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d" 
     });
 
     containerRef.current.appendChild(script);
-  }, [symbol, interval]);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      observer.disconnect();
+      for (const frame of observedFrames) frame.removeEventListener("load", onReady);
+      container.replaceChildren();
+    };
+  }, [symbol, interval, theme, attempt]);
 
   return (
     <div className="chart-wrapper">
@@ -60,6 +88,13 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d" 
         ref={containerRef}
         style={{ height: "100%", width: "100%" }}
       />
+      {status !== "ready" && <div className="chart-placeholder" role="status">
+        <span className="chart-placeholder-icon"><Icon name="chart" size={30} /></span>
+        <strong>{status === "loading" ? "Đang tải biểu đồ…" : "Chưa tải được biểu đồ"}</strong>
+        <p>{status === "loading" ? "Biểu đồ giá được cung cấp bởi TradingView." : "Kiểm tra kết nối mạng hoặc mở TradingView để xem biểu đồ."}</p>
+        {status === "error" && <div className="chart-placeholder-actions"><button className="tv-link-btn" type="button" onClick={() => setAttempt(value => value + 1)}><Icon name="refresh" size={16} />Thử lại</button>
+          <a className="tv-link-btn" href={`https://www.tradingview.com/chart/?symbol=BINANCE%3A${encodeURIComponent(symbol)}`} target="_blank" rel="noopener noreferrer">Mở TradingView <Icon name="arrow" size={16} /></a></div>}
+      </div>}
     </div>
   );
 }

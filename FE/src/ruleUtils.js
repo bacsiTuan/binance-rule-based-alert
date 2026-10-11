@@ -13,7 +13,7 @@ const isInt = (v) => Number.isInteger(Number(v)) && String(v).trim() !== "";
 
 function validateLength(length, label, errors, key) {
   if (!isInt(length) || Number(length) < 1 || Number(length) > MAX_LENGTH) {
-    errors[key] = `${label}: length phải là số nguyên từ 1 đến ${MAX_LENGTH}.`;
+    errors[key] = `${label}: chu kỳ phải là số nguyên từ 1 đến ${MAX_LENGTH}.`;
   }
 }
 
@@ -28,7 +28,7 @@ export function validateForm(form) {
 
   if (form.target.mode === "value") {
     const raw = form.target.value;
-    if (raw === "" || raw === null || Number.isNaN(Number(raw))) {
+    if (raw === "" || raw === null || !Number.isFinite(Number(raw))) {
       errors.targetValue = "Hãy nhập một con số.";
     } else if (form.left.type === "rsi" && (Number(raw) < 0 || Number(raw) > 100)) {
       errors.targetValue = "RSI luôn nằm trong khoảng 0–100.";

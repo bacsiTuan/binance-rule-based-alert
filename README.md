@@ -11,7 +11,7 @@ Mặc định dùng **Spot** theo kế hoạch `prototype-project-plan.docx`; c�
 
 Source được tách thành [FE/](FE/README.md) cho frontend và [BE/](BE/README.md)
 cho backend. `BE/` có code Python; `FE/` có giao diện React + Vite quản lý rules
-và biểu đồ TradingView, mặc định dùng dữ liệu mock. `compose.yaml`, `.env` của
+và biểu đồ TradingView, lấy symbol/chỉ báo từ API thật; luật lưu trong trình duyệt. `compose.yaml`, `.env` của
 backend và tài liệu chạy nằm ở thư mục gốc. Cấu hình frontend nằm tại `FE/.env`.
 
 Chạy giao diện bằng `npm ci` rồi `npm run dev` trong `FE/`; xem [README frontend](FE/README.md).
@@ -302,8 +302,8 @@ HUONG_DAN_CHAY.md          Hướng dẫn chạy và cấu hình .env
 ```
 
 Đã có luồng Binance → Redis và API tính SMA/EMA/RSI Wilder theo yêu cầu.
-Rule engine, gửi cảnh báo, SQL lưu rules/alerts và kết nối frontend với đầy đủ
-API thật vẫn thuộc các bước phát triển tiếp theo.
+FE đã kết nối `/symbols` và `/indicators`, hiển thị metadata nguồn và chính sách nến.
+Rule engine, gửi cảnh báo và lưu rules/alerts tại backend vẫn thuộc các bước tiếp theo.
 
 Tài liệu tham khảo:
 

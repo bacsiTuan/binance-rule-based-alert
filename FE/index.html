@@ -1,8 +1,14 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      try {
+        const savedTheme = localStorage.getItem("indicator_alert_theme");
+        if (savedTheme === "light" || savedTheme === "dark") document.documentElement.dataset.theme = savedTheme;
+      } catch { /* Mặc định dark khi trình duyệt chặn lưu trữ. */ }
+    </script>
     <meta
       name="description"
       content="Tạo và quản lý luật cảnh báo chỉ báo kỹ thuật (SMA, EMA, RSI) cho dữ liệu thị trường Binance."

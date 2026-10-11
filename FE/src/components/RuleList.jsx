@@ -1,4 +1,5 @@
 import { describeRule } from "../ruleUtils.js";
+import Icon from "./Icon.jsx";
 
 export default function RuleList({
   rules,
@@ -10,15 +11,15 @@ export default function RuleList({
   onSelectRule,
 }) {
   return (
-    <section className="card" aria-labelledby="list-title">
-      <h2 id="list-title" className="card-title">
-        Luật đã tạo <span className="count">{rules.length}</span>
-      </h2>
+    <section id="saved-rules" className="card" aria-labelledby="list-title">
+      <div className="section-heading"><span className="section-icon"><Icon name="bookmark" size={19} /></span>
+        <h2 id="list-title" className="card-title">Luật đã lưu <span className="count">{rules.length}</span></h2></div>
 
       {error && <p className="banner error" role="alert">{error}</p>}
       {loading && <p className="muted">Đang tải…</p>}
       {!loading && !error && rules.length === 0 && (
-        <p className="empty">Chưa có luật nào. Hãy tạo luật đầu tiên ở phía trên.</p>
+        <div className="empty"><span className="empty-icon"><Icon name="bookmark" size={25} /></span>
+          <strong>Điều kiện đầu tiên của bạn</strong><p>Chọn một luật mẫu ở trên, chỉnh điều kiện và nhấn “Lưu luật” để bắt đầu.</p></div>
       )}
 
       <ul className="rule-list">
@@ -28,17 +29,15 @@ export default function RuleList({
             <li
               key={r.id}
               className={`rule ${r.enabled ? "" : "off"} ${isSelected ? "selected" : ""}`}
-              onClick={() => onSelectRule && onSelectRule(r)}
-              title="Bấm để xem biểu đồ của cặp này"
-              style={{ cursor: "pointer" }}
             >
-              <div className="rule-main">
-                <p className="rule-text">{describeRule(r)}</p>
-                <p className="rule-meta">
+              <button type="button" className="rule-main" aria-pressed={isSelected}
+                onClick={() => onSelectRule?.(r)} title="Xem biểu đồ của cặp này">
+                <span className="rule-text">{describeRule(r)}</span>
+                <span className="rule-meta">
                   {r.candle_mode === "closed" ? "Nến đã đóng" : "Gồm nến hiện tại"}
-                  {" · "}#{r.id}
-                </p>
-              </div>
+                  {" · "}{r.enabled ? "Đang bật" : "Đang tắt"}
+                </span>
+              </button>
               <label
                 className="switch"
                 title={r.enabled ? "Đang bật" : "Đang tắt"}
@@ -61,12 +60,13 @@ export default function RuleList({
                   if (window.confirm("Xóa luật này?")) onDelete(r.id);
                 }}
               >
-                ✕
+                <Icon name="trash" size={17} />
               </button>
             </li>
           );
         })}
       </ul>
+      <p className="local-note">Bật/tắt lưu trạng thái trên máy này, chưa chạy cảnh báo.</p>
     </section>
   );
 }
