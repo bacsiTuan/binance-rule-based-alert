@@ -1,5 +1,8 @@
 # Binance Rule Based Alert — v1
 
+Kế hoạch tổng thể, checklist đã hoàn thành và việc còn lại đến 11/10/2026:
+xem [PROJECT_PLAN.md](PROJECT_PLAN.md).
+
 Quy trình phát triển với GitHub Spec Kit và Codex: xem [SPEC_KIT.md](SPEC_KIT.md).
 
 Người mới clone dự án: đọc [Hướng dẫn chạy](HUONG_DAN_CHAY.md) để khởi động backend
