@@ -4,8 +4,10 @@ services:
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     environment:
+      # Local Redis on the host machine (compose redis service is commented out).
+      REDIS_URL: redis://host.docker.internal:6379/0
       # Inside Docker, Redis is reached by its service name, not localhost.
-      REDIS_URL: redis://redis:6379/0
+      # REDIS_URL: redis://redis:6379/0
       BINANCE_MARKET: ${BINANCE_MARKET:-spot}
       BINANCE_BASE_URL: ${BINANCE_BASE_URL:-}
       BINANCE_TIMEOUT_SECONDS: ${BINANCE_TIMEOUT_SECONDS:-10}
@@ -14,9 +16,9 @@ services:
       STALE_TTL_SECONDS: ${STALE_TTL_SECONDS:-3600}
       SYMBOLS_TTL_SECONDS: ${SYMBOLS_TTL_SECONDS:-3600}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    depends_on:
-      redis:
-        condition: service_healthy
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
       interval: 10s
@@ -25,19 +27,19 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  redis:
-    image: redis:7.4-alpine
-    ports:
-      - "127.0.0.1:6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
+#   redis:
+#     image: redis:7.4-alpine
+#     ports:
+#       - "127.0.0.1:6379:6379"
+#     command: ["redis-server", "--appendonly", "yes"]
+#     volumes:
+#       - redis_data:/data
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 10
+#     restart: unless-stopped
 
-volumes:
-  redis_data:
+# volumes:
+#   redis_data:
