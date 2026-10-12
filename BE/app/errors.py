@@ -17,5 +17,9 @@ class TelegramError(Exception):
     pass
 
 
+class OpenAIClientError(Exception):
+    pass
+
+
 class CacheError(Exception):
     pass

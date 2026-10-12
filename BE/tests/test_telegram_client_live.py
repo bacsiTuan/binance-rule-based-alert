@@ -1,5 +1,5 @@
 """Sends a real Telegram message. Skipped unless the credentials are set in .env."""
-
+# pytest tests/test_telegram_client_live.py -v
 import httpx
 import pytest
 
@@ -17,7 +17,9 @@ pytestmark = pytest.mark.skipif(
 
 async def test_send_real_message():
     async with httpx.AsyncClient(timeout=10) as http:
-        await TelegramClient(settings, http).send_message("Tập hài lòng với những thứ mình đang có. Học từ bỏ những thứ trời không cho")
+        await TelegramClient(settings, http).send_message(
+            "Tập hài lòng với những thứ mình đang có. Học từ bỏ những thứ trời không cho"
+        )
 
 
 async def test_wrong_chat_id_is_rejected():

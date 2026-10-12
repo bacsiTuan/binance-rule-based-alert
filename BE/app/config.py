@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-5-mini"
+    openai_timeout_seconds: float = Field(default=60, gt=0)
 
     @model_validator(mode="after")
     def validate_ttls(self):
