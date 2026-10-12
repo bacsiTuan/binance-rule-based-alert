@@ -1,7 +1,7 @@
 import { useLanguage } from "./LanguageContext.jsx";
 import { useEffect, useState } from "react";
 import { api, isMock } from "./api/client.js";
-import { createLocalRules } from "./api/localRules.js";
+import { createRulesApi } from "./api/rulesClient.js";
 import IndicatorPanel from "./components/IndicatorPanel.jsx";
 import RuleForm from "./components/RuleForm.jsx";
 import RuleList from "./components/RuleList.jsx";
@@ -9,7 +9,7 @@ import TradingViewWidget from "./components/TradingViewWidget.jsx";
 import Icon from "./components/Icon.jsx";
 import { TIMEFRAMES } from "./constants.js";
 
-const ruleStore = createLocalRules(isMock);
+const ruleStore = createRulesApi(isMock);
 
 export default function App() {
   const { t, language, setLanguage, localizedError } = useLanguage();

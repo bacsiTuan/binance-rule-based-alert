@@ -43,3 +43,61 @@ class SymbolsResult(BaseModel):
     fetched_at: datetime
     warning: str | None = None
     symbols: list[str]
+
+
+Operator = Literal["gt", "lt", "gte", "lte", "cross_above", "cross_below"]
+CandleMode = Literal["closed", "include_current"]
+TriggerType = Literal["once", "once_per_bar_close", "every_time"]
+
+
+class Indicator(BaseModel):
+    type: str
+    length: int | None = None
+
+
+class TargetIndicator(BaseModel):
+    type: str
+    length: int
+
+
+class RuleCreate(BaseModel):
+    symbol: str
+    timeframe: Interval = "1d"
+    indicator: Indicator
+    operator: Operator
+    target: TargetIndicator | float | int
+    candle_mode: CandleMode = "closed"
+    trigger_type: TriggerType = "once_per_bar_close"
+    expiration: str | None = None
+    message: str | None = None
+    notifications: list[str] = ["app", "toasts"]
+
+
+class RuleUpdate(BaseModel):
+    symbol: str | None = None
+    timeframe: Interval | None = None
+    indicator: Indicator | None = None
+    operator: Operator | None = None
+    target: TargetIndicator | float | int | None = None
+    candle_mode: CandleMode | None = None
+    trigger_type: TriggerType | None = None
+    expiration: str | None = None
+    message: str | None = None
+    notifications: list[str] | None = None
+    enabled: bool | None = None
+
+
+class Rule(BaseModel):
+    id: int
+    symbol: str
+    timeframe: Interval
+    indicator: Indicator
+    operator: Operator
+    target: TargetIndicator | float | int
+    candle_mode: CandleMode = "closed"
+    trigger_type: TriggerType = "once_per_bar_close"
+    expiration: str | None = None
+    message: str | None = None
+    notifications: list[str] = ["app", "toasts"]
+    enabled: bool = True
+    created_at: str
