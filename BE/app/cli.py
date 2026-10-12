@@ -6,11 +6,11 @@ import sys
 import httpx
 from redis.asyncio import Redis
 
-from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import get_settings
 from app.errors import BinanceError, CacheError
 from app.service import MarketDataService
+from app.service.binance_client import BinanceClient
 
 
 async def fetch_once(args):

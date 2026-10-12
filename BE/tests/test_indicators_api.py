@@ -8,13 +8,13 @@ import fakeredis.aioredis
 import httpx
 import pytest
 
-from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import Settings
 from app.errors import BinanceError, CacheError
 from app.main import create_app
 from app.models import Candle, KlinesResult
 from app.service import MarketDataService
+from app.service.binance_client import BinanceClient
 
 
 def make_snapshot(count=60, **updates):

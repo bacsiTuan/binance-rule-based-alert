@@ -13,5 +13,9 @@ class BinanceError(Exception):
         self.retry_after = retry_after
 
 
+class TelegramError(Exception):
+    pass
+
+
 class CacheError(Exception):
     pass

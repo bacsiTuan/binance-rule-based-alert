@@ -7,7 +7,6 @@ from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
-from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import Settings, get_settings
 from app.errors import BinanceError, CacheError
@@ -15,6 +14,7 @@ from app.indicator_models import IndicatorRequest, IndicatorsResult
 from app.indicators import IndicatorDataError, calculate_indicators, utc_milliseconds
 from app.models import Interval, KlinesResult, SymbolsResult
 from app.service import MarketDataService
+from app.service.binance_client import BinanceClient
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

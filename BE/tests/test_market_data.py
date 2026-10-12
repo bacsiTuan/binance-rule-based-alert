@@ -6,12 +6,12 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import Settings
 from app.errors import BinanceError, CacheError
 from app.main import create_app
 from app.service import MarketDataService
+from app.service.binance_client import BinanceClient
 
 ROWS = [
     [1000, "1", "3", "1", "2.123456789012345678", "10", 1999],

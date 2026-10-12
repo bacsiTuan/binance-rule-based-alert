@@ -5,11 +5,11 @@ from datetime import UTC, datetime
 
 from pydantic import ValidationError
 
-from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import Settings
 from app.errors import BinanceError
 from app.models import Interval, KlinesResult, SymbolsResult
+from app.service.binance_client import BinanceClient
 
 logger = logging.getLogger(__name__)
 

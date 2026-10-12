@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     stale_ttl_seconds: int = Field(default=3600, ge=1)
     symbols_ttl_seconds: int = Field(default=3600, ge=1)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    telegram_bot_token: str | None = None
+    telegram_chat_id: str | None = None
 
     @model_validator(mode="after")
     def validate_ttls(self):
