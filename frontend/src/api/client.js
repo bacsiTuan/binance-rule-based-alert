@@ -74,7 +74,10 @@ async function request(path, options = {}) {
 }
 
 const realApi = {
-  getSymbols: () => request("/symbols"),
+  getSymbols: async () => {
+    const data = await request("/symbols");
+    return Array.isArray(data) ? data : (data?.symbols || []);
+  },
   getRules: () => request("/rules"),
   createRule: (payload) => request("/rules", { method: "POST", body: JSON.stringify(payload) }),
   updateRule: (id, patch) => request(`/rules/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),

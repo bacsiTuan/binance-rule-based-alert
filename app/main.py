@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
@@ -10,7 +10,8 @@ from app.binance.client import BinanceClient
 from app.cache.redis_cache import RedisCache
 from app.config import Settings, get_settings
 from app.errors import BinanceError, CacheError
-from app.models import Interval, KlinesResult, SymbolsResult
+from app.models import Interval, KlinesResult, Rule, RuleCreate, RuleUpdate, SymbolsResult
+from app.rules import RuleStorage
 from app.service import MarketDataService
 
 
@@ -29,6 +30,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 app.state.service = MarketDataService(
                     settings, BinanceClient(settings, http), cache
                 )
+                app.state.rule_storage = RuleStorage(redis)
+                try:
+                    await app.state.rule_storage.init_seeds()
+                except Exception as exc:
+                    logging.warning("Could not initialize rule storage seeds: %s", exc)
                 yield
         finally:
             await redis.aclose()
@@ -65,6 +71,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/symbols", response_model=SymbolsResult)
     async def symbols(request: Request):
         return await request.app.state.service.symbols()
+
+    @app.get("/rules", response_model=list[Rule])
+    async def get_rules(request: Request):
+        return await request.app.state.rule_storage.list_rules()
+
+    @app.post("/rules", response_model=Rule, status_code=status.HTTP_201_CREATED)
+    async def create_rule(request: Request, payload: RuleCreate):
+        return await request.app.state.rule_storage.create_rule(payload)
+
+    @app.patch("/rules/{rule_id}", response_model=Rule)
+    async def update_rule(request: Request, rule_id: int, patch: RuleUpdate):
+        updated = await request.app.state.rule_storage.update_rule(rule_id, patch)
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Rule #{rule_id} not found")
+        return updated
+
+    @app.delete("/rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
+    async def delete_rule(request: Request, rule_id: int):
+        deleted = await request.app.state.rule_storage.delete_rule(rule_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Rule #{rule_id} not found")
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     return app
 

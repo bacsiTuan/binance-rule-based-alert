@@ -43,3 +43,49 @@ class SymbolsResult(BaseModel):
     fetched_at: datetime
     warning: str | None = None
     symbols: list[str]
+
+
+Operator = Literal["gt", "lt", "cross_above", "cross_below"]
+CandleMode = Literal["closed", "include_current"]
+
+
+class Indicator(BaseModel):
+    type: Literal["close", "sma", "ema", "rsi"]
+    length: int | None = None
+
+
+class TargetIndicator(BaseModel):
+    type: Literal["sma", "ema", "rsi"]
+    length: int
+
+
+class RuleCreate(BaseModel):
+    symbol: str
+    timeframe: Interval = "1d"
+    indicator: Indicator
+    operator: Operator
+    target: TargetIndicator | float | int
+    candle_mode: CandleMode = "closed"
+
+
+class RuleUpdate(BaseModel):
+    symbol: str | None = None
+    timeframe: Interval | None = None
+    indicator: Indicator | None = None
+    operator: Operator | None = None
+    target: TargetIndicator | float | int | None = None
+    candle_mode: CandleMode | None = None
+    enabled: bool | None = None
+
+
+class Rule(BaseModel):
+    id: int
+    symbol: str
+    timeframe: Interval
+    indicator: Indicator
+    operator: Operator
+    target: TargetIndicator | float | int
+    candle_mode: CandleMode
+    enabled: bool = True
+    created_at: str
+
