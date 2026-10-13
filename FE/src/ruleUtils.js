@@ -5,9 +5,11 @@ export const initialForm = {
   symbol: "BTCUSDT",
   timeframe: "1d",
   left: { type: "rsi", length: 14 },
-  operator: "cross_above",
-  target: { mode: "value", value: 30, type: "sma", length: 200 },
+  operator: "lt",
+  target: { mode: "value", value: 30 },
   candleMode: "closed",
+  triggerType: "once_per_bar_close",
+  message: "",
 };
 
 const isInt = (v) => Number.isInteger(Number(v)) && String(v).trim() !== "";
@@ -43,7 +45,7 @@ export function validateForm(form, language = "en") {
       form.left.type === form.target.type &&
       Number(form.left.length) === Number(form.target.length)
     ) {
-      errors.targetLength = translate("Hai vế giống hệt nhau nên luật không bao giờ kích hoạt.", language);
+      errors.targetLength = translate("Hai vế giống hệt nhau nên cảnh báo không bao giờ kích hoạt.", language);
     }
   }
   return errors;
@@ -61,23 +63,44 @@ export function buildPayload(form) {
       ? Number(form.target.value)
       : { type: form.target.type, length: Number(form.target.length) };
 
-  return {
+  const payload = {
     symbol: form.symbol,
     timeframe: form.timeframe,
     indicator,
     operator: form.operator,
     target,
     candle_mode: form.candleMode,
+    trigger_type: form.triggerType || "once_per_bar_close",
   };
+  if (form.message && form.message.trim()) {
+    payload.message = form.message.trim();
+  }
+  return payload;
 }
 
-const indicatorText = (i, language) =>
-  i.type === "close" ? translate("Giá", language) : `${i.type.toUpperCase()}(${i.length})`;
+const indicatorText = (i, language) => {
+  if (!i) return "";
+  if (i.type === "close") return translate("Giá", language);
+  if (i.type === "mass_index") return `Mass Index(${i.length || 10})`;
+  return `${i.type.toUpperCase()}(${i.length})`;
+};
 
-// Mô tả luật bằng chữ dễ đọc, ví dụ "BTCUSDT · 1D · RSI(14) cắt lên 30".
+const LEGACY_OP_LABELS = {
+  cross_above: "Cắt lên",
+  cross_below: "Cắt xuống",
+  gte: "Lớn hơn hoặc bằng",
+  lte: "Nhỏ hơn hoặc bằng",
+};
+
+// Mô tả luật bằng chữ dễ đọc, ví dụ "BTCUSDT · 1D · RSI(14) nhỏ hơn 30".
 export function describeRule(rule, language = "en") {
   const op = OPERATORS.find((o) => o.value === rule.operator);
-  const opText = op ? translate(op.label.split(" (")[0], language).toLowerCase() : rule.operator;
+  const fallback = LEGACY_OP_LABELS[rule.operator];
+  const opText = op
+    ? translate(op.label.split(" (")[0], language).toLowerCase()
+    : fallback
+    ? translate(fallback, language).toLowerCase()
+    : rule.operator;
   const target = typeof rule.target === "number" ? rule.target : indicatorText(rule.target, language);
   return `${rule.symbol} · ${rule.timeframe.toUpperCase()} · ${indicatorText(rule.indicator, language)} ${opText} ${target}`;
 }

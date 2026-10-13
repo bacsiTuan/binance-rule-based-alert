@@ -12,7 +12,8 @@ from app.config import Settings, get_settings
 from app.errors import BinanceError, CacheError
 from app.indicator_models import IndicatorRequest, IndicatorsResult
 from app.indicators import IndicatorDataError, calculate_indicators, utc_milliseconds
-from app.models import Interval, KlinesResult, SymbolsResult
+from app.models import Interval, KlinesResult, Rule, RuleCreate, RuleUpdate, SymbolsResult
+from app.rules import RuleStorage
 from app.service import MarketDataService
 from app.service.binance_client import BinanceClient
 
@@ -32,6 +33,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 app.state.service = MarketDataService(
                     settings, BinanceClient(settings, http), cache
                 )
+                rules_storage = RuleStorage(redis)
+                await rules_storage.init_seeds()
+                app.state.rules = rules_storage
                 yield
         finally:
             await redis.aclose()
@@ -80,6 +84,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/symbols", response_model=SymbolsResult)
     async def symbols(request: Request):
         return await request.app.state.service.symbols()
+
+    @app.get("/rules", response_model=list[Rule])
+    async def list_rules(request: Request):
+        return await request.app.state.rules.list_rules()
+
+    @app.post("/rules", response_model=Rule, status_code=201)
+    async def create_rule(body: RuleCreate, request: Request):
+        return await request.app.state.rules.create_rule(body)
+
+    @app.patch("/rules/{rule_id}", response_model=Rule)
+    async def update_rule(rule_id: int, body: RuleUpdate, request: Request):
+        rule = await request.app.state.rules.update_rule(rule_id, body)
+        if not rule:
+            return JSONResponse(status_code=404, content={"detail": "Rule not found"})
+        return rule
+
+    @app.delete("/rules/{rule_id}", status_code=204)
+    async def delete_rule(rule_id: int, request: Request):
+        deleted = await request.app.state.rules.delete_rule(rule_id)
+        if not deleted:
+            return JSONResponse(status_code=404, content={"detail": "Rule not found"})
+        return None
 
     return app
 

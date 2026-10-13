@@ -1,7 +1,8 @@
 // Adapt the form's rule schema to POST /indicators (name/period, interval/include_open).
 export function buildIndicatorRequest(rule) {
+  const supported = ["sma", "ema", "rsi"];
   const selections = [rule.indicator, rule.target]
-    .filter((item) => item && typeof item === "object" && item.type !== "close")
+    .filter((item) => item && typeof item === "object" && supported.includes(item.type))
     .map((item) => ({ name: item.type, period: item.length }));
   const unique = selections.filter((item, index) => selections.findIndex(
     (other) => other.name === item.name && other.period === item.period,

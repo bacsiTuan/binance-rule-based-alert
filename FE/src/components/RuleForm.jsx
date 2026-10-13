@@ -1,7 +1,7 @@
 import { useLanguage } from "../LanguageContext.jsx";
 import { cloneElement, useEffect, useMemo, useState } from "react";
 import {
-  CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TARGET_INDICATORS, TEMPLATES, TIMEFRAMES, MAX_LENGTH,
+  CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TEMPLATES, TIMEFRAMES, TRIGGER_TYPES, MAX_LENGTH,
 } from "../constants.js";
 import { buildPayload, describeRule, initialForm, validateForm } from "../ruleUtils.js";
 import { buildIndicatorRequest } from "../indicatorUtils.js";
@@ -29,9 +29,32 @@ export default function RuleForm({
   activeTimeframe,
   onTimeframeChange,
   onIndicatorRequestChange,
+  initialRule = null,
 }) {
   const { t, language, localizedError } = useLanguage();
-  const [form, setForm] = useState(initialForm);
+  const isEdit = !!initialRule;
+
+  const toFormState = (rule) => {
+    if (!rule) return structuredClone(initialForm);
+    return {
+      symbol: rule.symbol || "BTCUSDT",
+      timeframe: rule.timeframe || "1d",
+      left: {
+        type: rule.indicator?.type || "rsi",
+        length: rule.indicator?.length ?? 14,
+      },
+      operator: rule.operator || "lt",
+      target: {
+        mode: "value",
+        value: typeof rule.target === "number" ? rule.target : (rule.target?.value ?? 30),
+      },
+      candleMode: rule.candle_mode || "closed",
+      triggerType: rule.trigger_type || "once_per_bar_close",
+      message: rule.message || "",
+    };
+  };
+
+  const [form, setForm] = useState(() => toFormState(initialRule));
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -41,19 +64,26 @@ export default function RuleForm({
   const visibleSymbols = filteredSymbols.includes(form.symbol) ? filteredSymbols
     : symbols.includes(form.symbol) ? [form.symbol, ...filteredSymbols] : filteredSymbols;
 
-  // Đồng bộ symbol khi chọn từ ngoài
   useEffect(() => {
-    if (activeSymbol && activeSymbol !== form.symbol) {
+    setForm(toFormState(initialRule));
+    setTouched(false);
+    setServerError("");
+    setSaved(false);
+  }, [initialRule]);
+
+  // Đồng bộ symbol khi chọn từ ngoài (chỉ khi tạo mới)
+  useEffect(() => {
+    if (!isEdit && activeSymbol && activeSymbol !== form.symbol) {
       setForm((f) => ({ ...f, symbol: activeSymbol }));
     }
-  }, [activeSymbol]);
+  }, [activeSymbol, isEdit]);
 
-  // Đồng bộ timeframe khi chọn từ ngoài
+  // Đồng bộ timeframe khi chọn từ ngoài (chỉ khi tạo mới)
   useEffect(() => {
-    if (activeTimeframe && activeTimeframe !== form.timeframe) {
+    if (!isEdit && activeTimeframe && activeTimeframe !== form.timeframe) {
       setForm((f) => ({ ...f, timeframe: activeTimeframe }));
     }
-  }, [activeTimeframe]);
+  }, [activeTimeframe, isEdit]);
 
   // Khi danh sách symbol tải xong mà symbol hiện tại không có trong đó, chọn symbol đầu tiên.
   useEffect(() => {
@@ -84,6 +114,9 @@ export default function RuleForm({
       left: { ...template.left },
       operator: template.operator,
       target: { ...f.target, ...template.target },
+      candleMode: template.candleMode || "closed",
+      triggerType: template.triggerType || "once_per_bar_close",
+      message: "",
     }));
     setTouched(false);
     setServerError("");
@@ -126,12 +159,12 @@ export default function RuleForm({
 
   return (
     <form id="rule-form" className="card rule-form" onSubmit={handleSubmit} noValidate aria-labelledby="form-title">
-      <div className="section-heading"><span className="section-icon"><Icon name="plus" size={19} /></span>
-        <div><h2 id="form-title" className="card-title">{t("Tạo luật mới")}</h2><p className="section-description">{t("Bắt đầu với một điều kiện bạn muốn theo dõi.")}</p></div></div>
+      <div className="section-heading"><span className="section-icon"><Icon name={isEdit ? "edit" : "plus"} size={19} /></span>
+        <div><h2 id="form-title" className="card-title">{isEdit ? t("Cập nhật cảnh báo #{id}", { id: initialRule.id }) : t("Tạo cảnh báo mới")}</h2><p className="section-description">{isEdit ? t("Chỉnh sửa các thông số điều kiện của cảnh báo.") : t("Thiết lập điều kiện cảnh báo bạn muốn theo dõi.")}</p></div></div>
 
-      <Field id="template" label={t("Bắt đầu từ luật mẫu")}>
+      <Field id="template" label={t("Mẫu cảnh báo có sẵn")}>
         <select id="template" defaultValue="" onChange={(e) => applyTemplate(e.target.value)}>
-          <option value="">{t("— Chọn luật mẫu —")}</option>
+          <option value="">{t("— Chọn mẫu cảnh báo —")}</option>
           {TEMPLATES.map((item) => <option key={item.id} value={item.id}>{t(item.name)}</option>)}
         </select>
       </Field>
@@ -196,72 +229,80 @@ export default function RuleForm({
 
         <Field id="operator" label={t("Điều kiện so sánh")} hint={t(opDef?.hint)}>
           <select id="operator" value={form.operator} onChange={(e) => setForm({ ...form, operator: e.target.value })}>
-            {OPERATORS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
+            {OPERATORS.map((o) => (
+              <option key={o.value} value={o.value} disabled={o.disabled}>
+                {t(o.label)}{o.disabled ? ` — (${t("Vô hiệu hóa")})` : ""}
+              </option>
+            ))}
           </select>
         </Field>
 
         <div className="field">
           <span className="label" id="target-label">{t("So sánh với")}</span>
           <div className="segmented" role="group" aria-labelledby="target-label">
-            {[["value", t("Giá trị")], ["indicator", t("Chỉ báo")]].map(([mode, text]) => (
-              <button
-                key={mode} type="button" aria-pressed={form.target.mode === mode}
-                className={form.target.mode === mode ? "seg active" : "seg"}
-                onClick={() => setTarget({ mode })}
-              >
-                {text}
-              </button>
-            ))}
+            <button
+              type="button"
+              className="seg active"
+              aria-pressed="true"
+            >
+              {t("Giá trị")}
+            </button>
+            <button
+              type="button"
+              className="seg disabled"
+              disabled
+              aria-disabled="true"
+              style={{ opacity: 0.45, cursor: "not-allowed" }}
+              title={t("Chỉ áp dụng so sánh với giá trị số")}
+            >
+              {t("Chỉ báo")}
+            </button>
           </div>
         </div>
 
-        {form.target.mode === "value" ? (
-          <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
-            hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
-            <input
-              id="target-value" type="number" step="any" inputMode="decimal"
-              value={form.target.value} onChange={(e) => setTarget({ value: e.target.value })}
-            />
-          </Field>
-        ) : (
-          <div className="row">
-            <Field id="target-type" label={t("Chỉ báo đích")}>
-              <select id="target-type" value={form.target.type} onChange={(e) => setTarget({ type: e.target.value })}>
-                {TARGET_INDICATORS.map((i) => <option key={i.value} value={i.value}>{t(i.label)}</option>)}
-              </select>
-            </Field>
-            <Field id="target-length" label={t("Chu kỳ (số nến)")} error={shown.targetLength}>
-              <input
-                id="target-length" type="number" min="1" max={MAX_LENGTH} inputMode="numeric"
-                value={form.target.length} onChange={(e) => setTarget({ length: e.target.value })}
-              />
-            </Field>
-          </div>
-        )}
+        <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
+          hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
+          <input
+            id="target-value" type="number" step="any" inputMode="decimal"
+            value={form.target.value} onChange={(e) => setTarget({ mode: "value", value: e.target.value })}
+          />
+        </Field>
       </fieldset>
 
       <div className="form-step"><span>03</span> {t("Chọn dữ liệu nến")}</div>
 
       <Field id="candle-mode" label={t("Chế độ nến")} hint={t(modeDef?.hint)}>
         <select id="candle-mode" value={form.candleMode} onChange={(e) => setForm({ ...form, candleMode: e.target.value })}>
-          {CANDLE_MODES.map((m) => <option key={m.value} value={m.value}>{t(m.label)}</option>)}
+          {CANDLE_MODES.map((m) => (
+            <option key={m.value} value={m.value} disabled={m.disabled}>
+              {t(m.label)}{m.disabled ? ` — (${t("Vô hiệu hóa")})` : ""}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <div className="form-step"><span>04</span> {t("Tùy chọn cảnh báo TradingView")}</div>
+
+      <Field id="trigger-type" label={t("Cơ chế kích hoạt")}>
+        <select id="trigger-type" value={form.triggerType || "once_per_bar_close"} onChange={(e) => setForm({ ...form, triggerType: e.target.value })}>
+          {TRIGGER_TYPES.map((tr) => <option key={tr.value} value={tr.value}>{t(tr.label)}</option>)}
         </select>
       </Field>
 
       <div className="preview" aria-live="polite">
         <span className="preview-label">{t("Xem trước")}</span>
         <p className="preview-text">
-          {hasErrors ? t("Hoàn tất các trường để xem mô tả luật.") : describeRule(payload, language)}
+          {hasErrors ? t("Hoàn tất các trường để xem mô tả cảnh báo.") : describeRule(payload, language)}
         </p>
       </div>
 
-      {serverError && <p className="banner error" role="alert">{localizedError(serverError) || t("Không thể tạo luật.")}</p>}
-      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {t("Đã lưu luật. Bạn có thể xem trong danh sách bên dưới.")}</p>}
+      {serverError && <p className="banner error" role="alert">{localizedError(serverError) || t("Không thể tạo cảnh báo.")}</p>}
+      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {isEdit ? t("Đã cập nhật cảnh báo.") : t("Đã tạo cảnh báo. Bạn có thể xem trong danh sách bên cạnh.")}</p>}
 
       <button id="submit-rule" className="btn primary" type="submit" disabled={submitting || !symbols.length}>
-        <Icon name="plus" size={18} />{submitting ? t("Đang lưu…") : t("Lưu luật")}
+        <Icon name={isEdit ? "check" : "plus"} size={18} />{submitting ? (isEdit ? t("Đang cập nhật…") : t("Đang tạo…")) : (isEdit ? t("Cập nhật cảnh báo") : t("Tạo cảnh báo"))}
       </button>
-      <p className="local-note">{t("Lưu trên trình duyệt này · Chưa gửi cảnh báo tự động")}</p>
+      <p className="local-note">{t("Cảnh báo được lưu và quản lý trên cơ sở dữ liệu Redis")}</p>
     </form>
   );
 }
