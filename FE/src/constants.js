@@ -33,7 +33,7 @@ export const TRIGGER_TYPES = [
 
 export const CANDLE_MODES = [
   { value: "closed", label: "Chỉ nến đã đóng", hint: "Ổn định, tín hiệu không biến mất" },
-  { value: "include_current", label: "Gồm nến hiện tại", hint: "Nhanh hơn nhưng tín hiệu có thể xuất hiện rồi mất" },
+  { value: "include_current", label: "Gồm nến hiện tại", hint: "Nhanh hơn nhưng tín hiệu có thể xuất hiện rồi mất", disabled: true },
 ];
 
 // Giới hạn length: backend cache ~300 nến mỗi key, cần length + 1 nến trở lên.

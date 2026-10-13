@@ -243,7 +243,11 @@ export default function RuleForm({
 
       <Field id="candle-mode" label={t("Chế độ nến")} hint={t(modeDef?.hint)}>
         <select id="candle-mode" value={form.candleMode} onChange={(e) => setForm({ ...form, candleMode: e.target.value })}>
-          {CANDLE_MODES.map((m) => <option key={m.value} value={m.value}>{t(m.label)}</option>)}
+          {CANDLE_MODES.map((m) => (
+            <option key={m.value} value={m.value} disabled={m.disabled}>
+              {t(m.label)}{m.disabled ? ` — (${t("Vô hiệu hóa")})` : ""}
+            </option>
+          ))}
         </select>
       </Field>
 
