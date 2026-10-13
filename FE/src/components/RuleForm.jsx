@@ -1,7 +1,7 @@
 import { useLanguage } from "../LanguageContext.jsx";
 import { cloneElement, useEffect, useMemo, useState } from "react";
 import {
-  CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TARGET_INDICATORS, TEMPLATES, TIMEFRAMES, TRIGGER_TYPES, MAX_LENGTH,
+  CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TEMPLATES, TIMEFRAMES, TRIGGER_TYPES, MAX_LENGTH,
 } from "../constants.js";
 import { buildPayload, describeRule, initialForm, validateForm } from "../ruleUtils.js";
 import { buildIndicatorRequest } from "../indicatorUtils.js";
@@ -202,44 +202,13 @@ export default function RuleForm({
           </select>
         </Field>
 
-        <div className="field">
-          <span className="label" id="target-label">{t("So sánh với")}</span>
-          <div className="segmented" role="group" aria-labelledby="target-label">
-            {[["value", t("Giá trị")], ["indicator", t("Chỉ báo")]].map(([mode, text]) => (
-              <button
-                key={mode} type="button" aria-pressed={form.target.mode === mode}
-                className={form.target.mode === mode ? "seg active" : "seg"}
-                onClick={() => setTarget({ mode })}
-              >
-                {text}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {form.target.mode === "value" ? (
-          <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
-            hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
-            <input
-              id="target-value" type="number" step="any" inputMode="decimal"
-              value={form.target.value} onChange={(e) => setTarget({ value: e.target.value })}
-            />
-          </Field>
-        ) : (
-          <div className="row">
-            <Field id="target-type" label={t("Chỉ báo đích")}>
-              <select id="target-type" value={form.target.type} onChange={(e) => setTarget({ type: e.target.value })}>
-                {TARGET_INDICATORS.map((i) => <option key={i.value} value={i.value}>{t(i.label)}</option>)}
-              </select>
-            </Field>
-            <Field id="target-length" label={t("Chu kỳ (số nến)")} error={shown.targetLength}>
-              <input
-                id="target-length" type="number" min="1" max={MAX_LENGTH} inputMode="numeric"
-                value={form.target.length} onChange={(e) => setTarget({ length: e.target.value })}
-              />
-            </Field>
-          </div>
-        )}
+        <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
+          hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
+          <input
+            id="target-value" type="number" step="any" inputMode="decimal"
+            value={form.target.value} onChange={(e) => setTarget({ mode: "value", value: e.target.value })}
+          />
+        </Field>
       </fieldset>
 
       <div className="form-step"><span>03</span> {t("Chọn dữ liệu nến")}</div>

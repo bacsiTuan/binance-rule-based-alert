@@ -28,8 +28,8 @@ test("Every form option and template has an English translation with matching in
 test("Rule previews and validation change language without changing stored rule data or the request payload", () => {
   const form = structuredClone(initialForm);
   const payload = buildPayload(form);
-  assert.equal(describeRule(payload), "BTCUSDT · 1D · RSI(14) crosses above 30");
-  assert.equal(describeRule(payload, "vi"), "BTCUSDT · 1D · RSI(14) cắt lên 30");
+  assert.equal(describeRule(payload), "BTCUSDT · 1D · RSI(14) less than 30");
+  assert.equal(describeRule(payload, "vi"), "BTCUSDT · 1D · RSI(14) nhỏ hơn 30");
   form.left.length = 0;
   assert.match(validateForm(form).leftLength, /period must be an integer/);
   assert.match(validateForm(form, "vi").leftLength, /chu kỳ phải là số nguyên/);

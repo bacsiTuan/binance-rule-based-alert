@@ -5,8 +5,8 @@ export const initialForm = {
   symbol: "BTCUSDT",
   timeframe: "1d",
   left: { type: "rsi", length: 14 },
-  operator: "cross_above",
-  target: { mode: "value", value: 30, type: "sma", length: 200 },
+  operator: "lt",
+  target: { mode: "value", value: 30 },
   candleMode: "closed",
   triggerType: "once_per_bar_close",
   message: "",
@@ -85,10 +85,22 @@ const indicatorText = (i, language) => {
   return `${i.type.toUpperCase()}(${i.length})`;
 };
 
-// Mô tả luật bằng chữ dễ đọc, ví dụ "BTCUSDT · 1D · RSI(14) cắt lên 30".
+const LEGACY_OP_LABELS = {
+  cross_above: "Cắt lên",
+  cross_below: "Cắt xuống",
+  gte: "Lớn hơn hoặc bằng",
+  lte: "Nhỏ hơn hoặc bằng",
+};
+
+// Mô tả luật bằng chữ dễ đọc, ví dụ "BTCUSDT · 1D · RSI(14) nhỏ hơn 30".
 export function describeRule(rule, language = "en") {
   const op = OPERATORS.find((o) => o.value === rule.operator);
-  const opText = op ? translate(op.label.split(" (")[0], language).toLowerCase() : rule.operator;
+  const fallback = LEGACY_OP_LABELS[rule.operator];
+  const opText = op
+    ? translate(op.label.split(" (")[0], language).toLowerCase()
+    : fallback
+    ? translate(fallback, language).toLowerCase()
+    : rule.operator;
   const target = typeof rule.target === "number" ? rule.target : indicatorText(rule.target, language);
   return `${rule.symbol} · ${rule.timeframe.toUpperCase()} · ${indicatorText(rule.indicator, language)} ${opText} ${target}`;
 }
