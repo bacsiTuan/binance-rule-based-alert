@@ -46,7 +46,10 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     ruleStore.getRules().then((items) => {
-      if (!cancelled) setRules(items);
+      if (!cancelled) {
+        const sorted = [...items].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+        setRules(sorted);
+      }
     }).catch((err) => {
       if (!cancelled) setError(err);
     }).finally(() => {
@@ -73,7 +76,7 @@ export default function App() {
 
   const createRule = async (payload) => {
     const rule = await ruleStore.createRule(payload);
-    setRules((prev) => [...prev, rule]);
+    setRules((prev) => [rule, ...prev]);
   };
 
   const toggleRule = async (rule) => {

@@ -118,6 +118,8 @@ export const english = {
   "Nhỏ hơn hoặc bằng": "Less than or equal",
   "Cắt lên": "Crosses above",
   "Cắt xuống": "Crosses below",
+  "Vô hiệu hóa": "Disabled",
+  "Chỉ áp dụng so sánh với giá trị số": "Only numeric values are supported",
   "Đúng ở MỌI nến mà A > B (trạng thái)": "True on every candle where A > B (state)",
   "Đúng ở MỌI nến mà A >= B (trạng thái)": "True on every candle where A >= B (state)",
   "Đúng ở MỌI nến mà A < B (trạng thái)": "True on every candle where A < B (state)",

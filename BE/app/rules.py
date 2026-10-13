@@ -98,7 +98,7 @@ class RuleStorage:
             except Exception as exc:
                 logger.warning("Skipping invalid rule payload: %s", exc)
                 continue
-        rules.sort(key=lambda r: r.id)
+        rules.sort(key=lambda r: r.id, reverse=True)
         return rules
 
     async def get_rule(self, rule_id: int) -> Rule | None:

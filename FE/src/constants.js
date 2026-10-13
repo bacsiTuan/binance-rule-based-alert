@@ -15,10 +15,14 @@ export const LEFT_INDICATORS = [
 
 export const TARGET_INDICATORS = LEFT_INDICATORS;
 
-// Vế giữa: chỉ có lớn hơn hoặc nhỏ hơn (không có cắt)
+// Vế giữa: giữ lại 4 toán tử so sánh đầu tiên, 2 cái cắt ở cuối vô hiệu hóa (disable)
 export const OPERATORS = [
   { value: "gt", label: "Lớn hơn (more than / >)", hint: "Đúng ở MỌI nến mà A > B (trạng thái)" },
+  { value: "gte", label: "Lớn hơn hoặc bằng (more than or equal / >=)", hint: "Đúng ở MỌI nến mà A >= B (trạng thái)" },
   { value: "lt", label: "Nhỏ hơn (less than / <)", hint: "Đúng ở MỌI nến mà A < B (trạng thái)" },
+  { value: "lte", label: "Nhỏ hơn hoặc bằng (less than or equal / <=)", hint: "Đúng ở MỌI nến mà A <= B (trạng thái)" },
+  { value: "cross_above", label: "Cắt lên (crossup / crossing up)", hint: "Chỉ đúng ở nến A vừa vượt lên B (sự kiện)", disabled: true },
+  { value: "cross_below", label: "Cắt xuống (crossdown / crossing down)", hint: "Chỉ đúng ở nến A vừa rơi xuống dưới B (sự kiện)", disabled: true },
 ];
 
 export const TRIGGER_TYPES = [

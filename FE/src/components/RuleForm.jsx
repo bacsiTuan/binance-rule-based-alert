@@ -84,8 +84,9 @@ export default function RuleForm({
       left: { ...template.left },
       operator: template.operator,
       target: { ...f.target, ...template.target },
-      triggerType: template.triggerType || f.triggerType || "once_per_bar_close",
-      message: template.message || "",
+      candleMode: template.candleMode || "closed",
+      triggerType: template.triggerType || "once_per_bar_close",
+      message: "",
     }));
     setTouched(false);
     setServerError("");
@@ -198,9 +199,36 @@ export default function RuleForm({
 
         <Field id="operator" label={t("Điều kiện so sánh")} hint={t(opDef?.hint)}>
           <select id="operator" value={form.operator} onChange={(e) => setForm({ ...form, operator: e.target.value })}>
-            {OPERATORS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
+            {OPERATORS.map((o) => (
+              <option key={o.value} value={o.value} disabled={o.disabled}>
+                {t(o.label)}{o.disabled ? ` — (${t("Vô hiệu hóa")})` : ""}
+              </option>
+            ))}
           </select>
         </Field>
+
+        <div className="field">
+          <span className="label" id="target-label">{t("So sánh với")}</span>
+          <div className="segmented" role="group" aria-labelledby="target-label">
+            <button
+              type="button"
+              className="seg active"
+              aria-pressed="true"
+            >
+              {t("Giá trị")}
+            </button>
+            <button
+              type="button"
+              className="seg disabled"
+              disabled
+              aria-disabled="true"
+              style={{ opacity: 0.45, cursor: "not-allowed" }}
+              title={t("Chỉ áp dụng so sánh với giá trị số")}
+            >
+              {t("Chỉ báo")}
+            </button>
+          </div>
+        </div>
 
         <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
           hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
@@ -221,22 +249,11 @@ export default function RuleForm({
 
       <div className="form-step"><span>04</span> {t("Tùy chọn cảnh báo TradingView")}</div>
 
-      <div className="row">
-        <Field id="trigger-type" label={t("Cơ chế kích hoạt")}>
-          <select id="trigger-type" value={form.triggerType || "once_per_bar_close"} onChange={(e) => setForm({ ...form, triggerType: e.target.value })}>
-            {TRIGGER_TYPES.map((tr) => <option key={tr.value} value={tr.value}>{t(tr.label)}</option>)}
-          </select>
-        </Field>
-        <Field id="rule-message" label={t("Tin nhắn cảnh báo")}>
-          <input
-            id="rule-message"
-            type="text"
-            placeholder={t("Ví dụ: Mass index (10) Crossing 9.52 on BTCUSDT")}
-            value={form.message || ""}
-            onChange={(e) => setForm({ ...form, message: e.target.value })}
-          />
-        </Field>
-      </div>
+      <Field id="trigger-type" label={t("Cơ chế kích hoạt")}>
+        <select id="trigger-type" value={form.triggerType || "once_per_bar_close"} onChange={(e) => setForm({ ...form, triggerType: e.target.value })}>
+          {TRIGGER_TYPES.map((tr) => <option key={tr.value} value={tr.value}>{t(tr.label)}</option>)}
+        </select>
+      </Field>
 
       <div className="preview" aria-live="polite">
         <span className="preview-label">{t("Xem trước")}</span>

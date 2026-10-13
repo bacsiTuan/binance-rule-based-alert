@@ -1,4 +1,5 @@
 import { useLanguage } from "../LanguageContext.jsx";
+import { useMemo } from "react";
 import { describeRule } from "../ruleUtils.js";
 import Icon from "./Icon.jsx";
 
@@ -12,6 +13,10 @@ export default function RuleList({
   onSelectRule,
 }) {
   const { t, language, localizedError } = useLanguage();
+  const sortedRules = useMemo(() => {
+    return [...rules].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+  }, [rules]);
+
   return (
     <section id="saved-rules" className="card" aria-labelledby="list-title">
       <div className="section-heading"><span className="section-icon"><Icon name="bookmark" size={19} /></span>
@@ -25,7 +30,7 @@ export default function RuleList({
       )}
 
       <ul className="rule-list">
-        {rules.map((r) => {
+        {sortedRules.map((r) => {
           const isSelected = activeSymbol === r.symbol;
           const triggerLabels = {
             once: "Chỉ 1 lần",
