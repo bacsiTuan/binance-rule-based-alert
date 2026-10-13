@@ -181,8 +181,9 @@ input::placeholder { color: var(--muted); }
 .empty strong { display: block; font-size: 13px; font-weight: 600; }
 .empty p { margin: 7px auto 0; max-width: 260px; font-size: 12px; color: var(--muted); }
 .muted { color: var(--muted); font-size: 13px; }
-.icon-btn { flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; }
+.icon-btn { flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; transition: all 0.15s ease; }
 .icon-btn:hover { color: var(--bad); background: var(--error-bg); }
+.icon-btn.edit-btn:hover { color: var(--accent); background: var(--accent-soft); }
 .switch { position: relative; width: 36px; height: 22px; margin: 0; flex-shrink: 0; }
 .switch input { position: absolute; opacity: 0; width: 44px; height: 44px; left: -4px; top: -11px; margin: 0; cursor: pointer; z-index: 1; }
 .slider { position: absolute; inset: 0; background: var(--toggle-off); border-radius: 20px; transition: background .15s; pointer-events: none; }

@@ -29,9 +29,32 @@ export default function RuleForm({
   activeTimeframe,
   onTimeframeChange,
   onIndicatorRequestChange,
+  initialRule = null,
 }) {
   const { t, language, localizedError } = useLanguage();
-  const [form, setForm] = useState(initialForm);
+  const isEdit = !!initialRule;
+
+  const toFormState = (rule) => {
+    if (!rule) return structuredClone(initialForm);
+    return {
+      symbol: rule.symbol || "BTCUSDT",
+      timeframe: rule.timeframe || "1d",
+      left: {
+        type: rule.indicator?.type || "rsi",
+        length: rule.indicator?.length ?? 14,
+      },
+      operator: rule.operator || "lt",
+      target: {
+        mode: "value",
+        value: typeof rule.target === "number" ? rule.target : (rule.target?.value ?? 30),
+      },
+      candleMode: rule.candle_mode || "closed",
+      triggerType: rule.trigger_type || "once_per_bar_close",
+      message: rule.message || "",
+    };
+  };
+
+  const [form, setForm] = useState(() => toFormState(initialRule));
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -41,19 +64,26 @@ export default function RuleForm({
   const visibleSymbols = filteredSymbols.includes(form.symbol) ? filteredSymbols
     : symbols.includes(form.symbol) ? [form.symbol, ...filteredSymbols] : filteredSymbols;
 
-  // Đồng bộ symbol khi chọn từ ngoài
   useEffect(() => {
-    if (activeSymbol && activeSymbol !== form.symbol) {
+    setForm(toFormState(initialRule));
+    setTouched(false);
+    setServerError("");
+    setSaved(false);
+  }, [initialRule]);
+
+  // Đồng bộ symbol khi chọn từ ngoài (chỉ khi tạo mới)
+  useEffect(() => {
+    if (!isEdit && activeSymbol && activeSymbol !== form.symbol) {
       setForm((f) => ({ ...f, symbol: activeSymbol }));
     }
-  }, [activeSymbol]);
+  }, [activeSymbol, isEdit]);
 
-  // Đồng bộ timeframe khi chọn từ ngoài
+  // Đồng bộ timeframe khi chọn từ ngoài (chỉ khi tạo mới)
   useEffect(() => {
-    if (activeTimeframe && activeTimeframe !== form.timeframe) {
+    if (!isEdit && activeTimeframe && activeTimeframe !== form.timeframe) {
       setForm((f) => ({ ...f, timeframe: activeTimeframe }));
     }
-  }, [activeTimeframe]);
+  }, [activeTimeframe, isEdit]);
 
   // Khi danh sách symbol tải xong mà symbol hiện tại không có trong đó, chọn symbol đầu tiên.
   useEffect(() => {
@@ -129,8 +159,8 @@ export default function RuleForm({
 
   return (
     <form id="rule-form" className="card rule-form" onSubmit={handleSubmit} noValidate aria-labelledby="form-title">
-      <div className="section-heading"><span className="section-icon"><Icon name="plus" size={19} /></span>
-        <div><h2 id="form-title" className="card-title">{t("Tạo cảnh báo mới")}</h2><p className="section-description">{t("Thiết lập điều kiện cảnh báo bạn muốn theo dõi.")}</p></div></div>
+      <div className="section-heading"><span className="section-icon"><Icon name={isEdit ? "edit" : "plus"} size={19} /></span>
+        <div><h2 id="form-title" className="card-title">{isEdit ? t("Cập nhật cảnh báo #{id}", { id: initialRule.id }) : t("Tạo cảnh báo mới")}</h2><p className="section-description">{isEdit ? t("Chỉnh sửa các thông số điều kiện của cảnh báo.") : t("Thiết lập điều kiện cảnh báo bạn muốn theo dõi.")}</p></div></div>
 
       <Field id="template" label={t("Mẫu cảnh báo có sẵn")}>
         <select id="template" defaultValue="" onChange={(e) => applyTemplate(e.target.value)}>
@@ -267,10 +297,10 @@ export default function RuleForm({
       </div>
 
       {serverError && <p className="banner error" role="alert">{localizedError(serverError) || t("Không thể tạo cảnh báo.")}</p>}
-      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {t("Đã tạo cảnh báo. Bạn có thể xem trong danh sách bên cạnh.")}</p>}
+      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {isEdit ? t("Đã cập nhật cảnh báo.") : t("Đã tạo cảnh báo. Bạn có thể xem trong danh sách bên cạnh.")}</p>}
 
       <button id="submit-rule" className="btn primary" type="submit" disabled={submitting || !symbols.length}>
-        <Icon name="plus" size={18} />{submitting ? t("Đang tạo…") : t("Tạo cảnh báo")}
+        <Icon name={isEdit ? "check" : "plus"} size={18} />{submitting ? (isEdit ? t("Đang cập nhật…") : t("Đang tạo…")) : (isEdit ? t("Cập nhật cảnh báo") : t("Tạo cảnh báo"))}
       </button>
       <p className="local-note">{t("Cảnh báo được lưu và quản lý trên cơ sở dữ liệu Redis")}</p>
     </form>

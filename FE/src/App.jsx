@@ -27,16 +27,18 @@ export default function App() {
   const [activeSymbol, setActiveSymbol] = useState("BTCUSDT");
   const [activeTimeframe, setActiveTimeframe] = useState("1d");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState(null);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && isModalOpen) {
+      if (e.key === "Escape" && (isModalOpen || editingRule)) {
         setIsModalOpen(false);
+        setEditingRule(null);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen]);
+  }, [isModalOpen, editingRule]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -77,6 +79,16 @@ export default function App() {
   const createRule = async (payload) => {
     const rule = await ruleStore.createRule(payload);
     setRules((prev) => [rule, ...prev]);
+  };
+
+  const updateRule = async (id, payload) => {
+    try {
+      const updated = await ruleStore.updateRule(id, payload);
+      setRules((prev) => prev.map((r) => (r.id === id ? updated : r)));
+    } catch (e) {
+      setError(e);
+      throw e;
+    }
   };
 
   const toggleRule = async (rule) => {
@@ -211,6 +223,7 @@ export default function App() {
               loading={loading}
               error={error}
               onToggle={toggleRule}
+              onEdit={(rule) => setEditingRule(rule)}
               onDelete={deleteRule}
               activeSymbol={activeSymbol}
               onSelectRule={handleSelectRule}
@@ -223,11 +236,14 @@ export default function App() {
         {t("Tín hiệu chỉ là cảnh báo, không phải dự đoán hay lời khuyên đầu tư.")}
       </footer>
 
-      {/* MODAL POPUP CHUẨN TRADINGVIEW (CREATE ALERT MODAL) */}
-      {isModalOpen && (
+      {/* MODAL POPUP CHUẨN TRADINGVIEW (CREATE / UPDATE ALERT MODAL) */}
+      {(isModalOpen || !!editingRule) && (
         <div
           className="modal-backdrop"
-          onClick={() => setIsModalOpen(false)}
+          onClick={() => {
+            setIsModalOpen(false);
+            setEditingRule(null);
+          }}
           role="presentation"
         >
           <div
@@ -239,15 +255,20 @@ export default function App() {
           >
             <div className="modal-header">
               <div className="modal-title-group">
-                <span className="modal-icon"><Icon name="chart" size={18} /></span>
+                <span className="modal-icon"><Icon name={editingRule ? "edit" : "chart"} size={18} /></span>
                 <h2 id="modal-alert-title" className="modal-title">
-                  {t("Tạo cảnh báo trên {symbol}", { symbol: activeSymbol })}
+                  {editingRule
+                    ? t("Cập nhật cảnh báo #{id}", { id: editingRule.id })
+                    : t("Tạo cảnh báo trên {symbol}", { symbol: activeSymbol })}
                 </h2>
               </div>
               <button
                 type="button"
                 className="modal-close-btn"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingRule(null);
+                }}
                 aria-label={t("Đóng")}
               >
                 ✕
@@ -256,13 +277,19 @@ export default function App() {
             <div className="modal-body">
               <RuleForm
                 symbols={symbols}
+                initialRule={editingRule}
                 onSubmit={async (payload) => {
-                  await createRule(payload);
-                  setIsModalOpen(false);
+                  if (editingRule) {
+                    await updateRule(editingRule.id, payload);
+                    setEditingRule(null);
+                  } else {
+                    await createRule(payload);
+                    setIsModalOpen(false);
+                  }
                 }}
-                activeSymbol={activeSymbol}
+                activeSymbol={editingRule ? editingRule.symbol : activeSymbol}
                 onSymbolChange={setActiveSymbol}
-                activeTimeframe={activeTimeframe}
+                activeTimeframe={editingRule ? editingRule.timeframe : activeTimeframe}
                 onTimeframeChange={setActiveTimeframe}
                 onIndicatorRequestChange={setIndicatorRequest}
               />

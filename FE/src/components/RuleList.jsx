@@ -8,6 +8,7 @@ export default function RuleList({
   loading,
   error,
   onToggle,
+  onEdit,
   onDelete,
   activeSymbol,
   onSelectRule,
@@ -55,6 +56,18 @@ export default function RuleList({
                     💬 {r.message}
                   </span>
                 )}
+              </button>
+              <button
+                type="button"
+                className="icon-btn edit-btn"
+                aria-label={t("Cập nhật cảnh báo {id}", { id: r.id })}
+                title={t("Cập nhật cảnh báo")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(r);
+                }}
+              >
+                <Icon name="edit" size={16} />
               </button>
               <label
                 className="switch"
