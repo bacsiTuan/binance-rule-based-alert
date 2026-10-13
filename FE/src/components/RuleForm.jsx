@@ -1,7 +1,7 @@
 import { useLanguage } from "../LanguageContext.jsx";
 import { cloneElement, useEffect, useMemo, useState } from "react";
 import {
-  CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TARGET_INDICATORS, TEMPLATES, TIMEFRAMES, MAX_LENGTH,
+  CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TARGET_INDICATORS, TEMPLATES, TIMEFRAMES, TRIGGER_TYPES, MAX_LENGTH,
 } from "../constants.js";
 import { buildPayload, describeRule, initialForm, validateForm } from "../ruleUtils.js";
 import { buildIndicatorRequest } from "../indicatorUtils.js";
@@ -84,6 +84,8 @@ export default function RuleForm({
       left: { ...template.left },
       operator: template.operator,
       target: { ...f.target, ...template.target },
+      triggerType: template.triggerType || f.triggerType || "once_per_bar_close",
+      message: template.message || "",
     }));
     setTouched(false);
     setServerError("");
@@ -248,6 +250,25 @@ export default function RuleForm({
         </select>
       </Field>
 
+      <div className="form-step"><span>04</span> {t("Tùy chọn cảnh báo TradingView")}</div>
+
+      <div className="row">
+        <Field id="trigger-type" label={t("Cơ chế kích hoạt")}>
+          <select id="trigger-type" value={form.triggerType || "once_per_bar_close"} onChange={(e) => setForm({ ...form, triggerType: e.target.value })}>
+            {TRIGGER_TYPES.map((tr) => <option key={tr.value} value={tr.value}>{t(tr.label)}</option>)}
+          </select>
+        </Field>
+        <Field id="rule-message" label={t("Tin nhắn cảnh báo")}>
+          <input
+            id="rule-message"
+            type="text"
+            placeholder={t("Ví dụ: Mass index (10) Crossing 9.52 on BTCUSDT")}
+            value={form.message || ""}
+            onChange={(e) => setForm({ ...form, message: e.target.value })}
+          />
+        </Field>
+      </div>
+
       <div className="preview" aria-live="polite">
         <span className="preview-label">{t("Xem trước")}</span>
         <p className="preview-text">
@@ -261,7 +282,7 @@ export default function RuleForm({
       <button id="submit-rule" className="btn primary" type="submit" disabled={submitting || !symbols.length}>
         <Icon name="plus" size={18} />{submitting ? t("Đang lưu…") : t("Lưu luật")}
       </button>
-      <p className="local-note">{t("Lưu trên trình duyệt này · Chưa gửi cảnh báo tự động")}</p>
+      <p className="local-note">{t("Được lưu trực tiếp vào cơ sở dữ liệu Redis qua Docker")}</p>
     </form>
   );
 }

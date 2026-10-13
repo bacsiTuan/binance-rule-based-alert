@@ -8,6 +8,8 @@ export const initialForm = {
   operator: "cross_above",
   target: { mode: "value", value: 30, type: "sma", length: 200 },
   candleMode: "closed",
+  triggerType: "once_per_bar_close",
+  message: "",
 };
 
 const isInt = (v) => Number.isInteger(Number(v)) && String(v).trim() !== "";
@@ -61,18 +63,27 @@ export function buildPayload(form) {
       ? Number(form.target.value)
       : { type: form.target.type, length: Number(form.target.length) };
 
-  return {
+  const payload = {
     symbol: form.symbol,
     timeframe: form.timeframe,
     indicator,
     operator: form.operator,
     target,
     candle_mode: form.candleMode,
+    trigger_type: form.triggerType || "once_per_bar_close",
   };
+  if (form.message && form.message.trim()) {
+    payload.message = form.message.trim();
+  }
+  return payload;
 }
 
-const indicatorText = (i, language) =>
-  i.type === "close" ? translate("Giá", language) : `${i.type.toUpperCase()}(${i.length})`;
+const indicatorText = (i, language) => {
+  if (!i) return "";
+  if (i.type === "close") return translate("Giá", language);
+  if (i.type === "mass_index") return `Mass Index(${i.length || 10})`;
+  return `${i.type.toUpperCase()}(${i.length})`;
+};
 
 // Mô tả luật bằng chữ dễ đọc, ví dụ "BTCUSDT · 1D · RSI(14) cắt lên 30".
 export function describeRule(rule, language = "en") {

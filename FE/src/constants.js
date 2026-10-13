@@ -12,15 +12,24 @@ export const LEFT_INDICATORS = [
   { value: "sma", label: "SMA – Trung bình động đơn giản", hasLength: true, defaultLength: 50 },
   { value: "ema", label: "EMA – Trung bình động mũ", hasLength: true, defaultLength: 12 },
   { value: "rsi", label: "RSI – Sức mạnh tương đối", hasLength: true, defaultLength: 14 },
+  { value: "mass_index", label: "Mass Index – Chỉ số dao động khối lượng", hasLength: true, defaultLength: 10 },
 ];
 
 export const TARGET_INDICATORS = LEFT_INDICATORS.filter((i) => i.value !== "close");
 
 export const OPERATORS = [
-  { value: "gt", label: "Lớn hơn (above)", hint: "Đúng ở MỌI nến mà A > B (trạng thái)" },
-  { value: "lt", label: "Nhỏ hơn (below)", hint: "Đúng ở MỌI nến mà A < B (trạng thái)" },
-  { value: "cross_above", label: "Cắt lên (cross above)", hint: "Chỉ đúng ở nến A vừa vượt lên B (sự kiện)" },
-  { value: "cross_below", label: "Cắt xuống (cross below)", hint: "Chỉ đúng ở nến A vừa rơi xuống dưới B (sự kiện)" },
+  { value: "gt", label: "Lớn hơn (more than / >)", hint: "Đúng ở MỌI nến mà A > B (trạng thái)" },
+  { value: "gte", label: "Lớn hơn hoặc bằng (more than or equal / >=)", hint: "Đúng ở MỌI nến mà A >= B (trạng thái)" },
+  { value: "lt", label: "Nhỏ hơn (less than / <)", hint: "Đúng ở MỌI nến mà A < B (trạng thái)" },
+  { value: "lte", label: "Nhỏ hơn hoặc bằng (less than or equal / <=)", hint: "Đúng ở MỌI nến mà A <= B (trạng thái)" },
+  { value: "cross_above", label: "Cắt lên (crossup / crossing up)", hint: "Chỉ đúng ở nến A vừa vượt lên B (sự kiện)" },
+  { value: "cross_below", label: "Cắt xuống (crossdown / crossing down)", hint: "Chỉ đúng ở nến A vừa rơi xuống dưới B (sự kiện)" },
+];
+
+export const TRIGGER_TYPES = [
+  { value: "once_per_bar_close", label: "Mỗi khi đóng nến (Once per bar close)", hint: "Kích hoạt khi nến đóng thỏa điều kiện" },
+  { value: "once", label: "Chỉ một lần (Once only)", hint: "Kích hoạt một lần duy nhất rồi tắt" },
+  { value: "every_time", label: "Mọi lúc (Every time)", hint: "Kích hoạt mỗi khi thỏa điều kiện" },
 ];
 
 export const CANDLE_MODES = [
@@ -31,8 +40,9 @@ export const CANDLE_MODES = [
 // Giới hạn length: backend cache ~300 nến mỗi key, cần length + 1 nến trở lên.
 export const MAX_LENGTH = 250;
 
-// 10 luật mẫu ở mục 5.4 của plan. Điền sẵn vào form để người dùng chọn nhanh.
+// 10 luật mẫu ở mục 5.4 của plan + Luật TradingView Mass Index. Điền sẵn vào form để người dùng chọn nhanh.
 export const TEMPLATES = [
+  { id: "t_mass_index", name: "Mass Index (10) cắt lên 9.52 – TradingView Alert", left: { type: "mass_index", length: 10 }, operator: "cross_above", target: { mode: "value", value: 9.52 }, triggerType: "once", message: "Mass index (10) Crossing 9.52 on BTCUSDT" },
   { id: "t1", name: "RSI(14) cắt lên 30 – Hồi phục quá bán", left: { type: "rsi", length: 14 }, operator: "cross_above", target: { mode: "value", value: 30 } },
   { id: "t2", name: "RSI(14) cắt xuống 70 – Đảo chiều quá mua", left: { type: "rsi", length: 14 }, operator: "cross_below", target: { mode: "value", value: 70 } },
   { id: "t3", name: "RSI(14) cắt lên 50 – Động lượng tăng", left: { type: "rsi", length: 14 }, operator: "cross_above", target: { mode: "value", value: 50 } },

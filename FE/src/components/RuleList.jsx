@@ -27,6 +27,11 @@ export default function RuleList({
       <ul className="rule-list">
         {rules.map((r) => {
           const isSelected = activeSymbol === r.symbol;
+          const triggerLabels = {
+            once: "Chỉ 1 lần",
+            once_per_bar_close: "Mỗi khi đóng nến",
+            every_time: "Mọi lúc",
+          };
           return (
             <li
               key={r.id}
@@ -37,8 +42,14 @@ export default function RuleList({
                 <span className="rule-text">{describeRule(r, language)}</span>
                 <span className="rule-meta">
                   {r.candle_mode === "closed" ? t("Nến đã đóng") : t("Gồm nến hiện tại")}
+                  {r.trigger_type ? ` · ${t(triggerLabels[r.trigger_type] || r.trigger_type)}` : ""}
                   {" · "}{r.enabled ? t("Đang bật") : t("Đang tắt")}
                 </span>
+                {r.message && (
+                  <span style={{ fontSize: "0.75rem", opacity: 0.75, display: "block", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    💬 {r.message}
+                  </span>
+                )}
               </button>
               <label
                 className="switch"
