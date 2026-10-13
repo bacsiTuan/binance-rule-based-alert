@@ -26,6 +26,17 @@ export default function App() {
   // Đồng bộ symbol và timeframe đang xem giữa Biểu đồ và Form tạo luật
   const [activeSymbol, setActiveSymbol] = useState("BTCUSDT");
   const [activeTimeframe, setActiveTimeframe] = useState("1d");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -97,7 +108,7 @@ export default function App() {
         </div>
         <nav className="main-nav" aria-label={t("Điều hướng chính")}>
           <a className="nav-active" href="#market">{t("Tổng quan")}</a>
-          <a href="#saved-rules">{t("Luật đã lưu")} <span>{rules.length}</span></a>
+          <a href="#saved-rules">{t("Cảnh báo")} <span>{rules.length}</span></a>
         </nav>
         <div className="topbar-actions">
           <div className="language-switch" role="group" aria-label={t("Ngôn ngữ")}>
@@ -124,7 +135,13 @@ export default function App() {
           <h1 id="page-title">{t("Theo dõi thị trường")}</h1>
           <p className="subtitle">{t("Quan sát xu hướng, xem chỉ báo và thiết lập điều kiện của bạn.")}</p>
         </div>
-        <a className="btn primary heading-action" href="#rule-form"><Icon name="plus" size={18} /> {t("Tạo luật mới")}</a>
+        <button
+          type="button"
+          className="btn primary heading-action"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Icon name="plus" size={18} /> {t("Tạo cảnh báo")}
+        </button>
       </section>
 
       {symbolError && <div className="banner error" role="alert">
@@ -167,28 +184,24 @@ export default function App() {
               theme={theme}
             />
           </div>
-          <div className="chart-foot"><span><span className="status-dot" /> {t("Biểu đồ từ TradingView")}</span><span>{t("Chọn cặp giao dịch trong form bên cạnh")}</span></div>
+          <div className="chart-foot"><span><span className="status-dot" /> {t("Biểu đồ từ TradingView")}</span><span>{t("Nhấn nút Tạo cảnh báo để đặt điều kiện")}</span></div>
         </section>
 
         <IndicatorPanel request={indicatorRequest} />
         </div>
 
-        {/* CỘT 2: 1/3 CÒN LẠI PHÂN BỐ DỌC TỪ TRÊN XUỐNG DƯỚI */}
+        {/* CỘT 2: 1/3 CÒN LẠI DÀNH TRỌN VẸN CHO QUẢN LÝ DANH SÁCH LUẬT VÀ NÚT TẠO CẢNH BÁO */}
         <aside className="sidebar-panels">
-          {/* PHẦN 1: TẠO LUẬT MỚI */}
-          <div className="sidebar-item">
-            <RuleForm
-              symbols={symbols}
-              onSubmit={createRule}
-              activeSymbol={activeSymbol}
-              onSymbolChange={setActiveSymbol}
-              activeTimeframe={activeTimeframe}
-              onTimeframeChange={setActiveTimeframe}
-              onIndicatorRequestChange={setIndicatorRequest}
-            />
+          <div className="sidebar-action-header">
+            <button
+              type="button"
+              className="btn-open-alert-modal"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Icon name="plus" size={18} /> {t("Tạo cảnh báo mới")}
+            </button>
           </div>
 
-          {/* PHẦN 2: LUẬT ĐÃ TẠO */}
           <div className="sidebar-item">
             <RuleList
               rules={rules}
@@ -206,6 +219,54 @@ export default function App() {
       <footer className="footnote">
         {t("Tín hiệu chỉ là cảnh báo, không phải dự đoán hay lời khuyên đầu tư.")}
       </footer>
+
+      {/* MODAL POPUP CHUẨN TRADINGVIEW (CREATE ALERT MODAL) */}
+      {isModalOpen && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsModalOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="modal-container"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-alert-title"
+          >
+            <div className="modal-header">
+              <div className="modal-title-group">
+                <span className="modal-icon"><Icon name="chart" size={18} /></span>
+                <h2 id="modal-alert-title" className="modal-title">
+                  {t("Tạo cảnh báo trên {symbol}", { symbol: activeSymbol })}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setIsModalOpen(false)}
+                aria-label={t("Đóng")}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <RuleForm
+                symbols={symbols}
+                onSubmit={async (payload) => {
+                  await createRule(payload);
+                  setIsModalOpen(false);
+                }}
+                activeSymbol={activeSymbol}
+                onSymbolChange={setActiveSymbol}
+                activeTimeframe={activeTimeframe}
+                onTimeframeChange={setActiveTimeframe}
+                onIndicatorRequestChange={setIndicatorRequest}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

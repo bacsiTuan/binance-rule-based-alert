@@ -45,7 +45,7 @@ export function validateForm(form, language = "en") {
       form.left.type === form.target.type &&
       Number(form.left.length) === Number(form.target.length)
     ) {
-      errors.targetLength = translate("Hai vế giống hệt nhau nên luật không bao giờ kích hoạt.", language);
+      errors.targetLength = translate("Hai vế giống hệt nhau nên cảnh báo không bao giờ kích hoạt.", language);
     }
   }
   return errors;

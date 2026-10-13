@@ -129,11 +129,11 @@ export default function RuleForm({
   return (
     <form id="rule-form" className="card rule-form" onSubmit={handleSubmit} noValidate aria-labelledby="form-title">
       <div className="section-heading"><span className="section-icon"><Icon name="plus" size={19} /></span>
-        <div><h2 id="form-title" className="card-title">{t("Tạo luật mới")}</h2><p className="section-description">{t("Bắt đầu với một điều kiện bạn muốn theo dõi.")}</p></div></div>
+        <div><h2 id="form-title" className="card-title">{t("Tạo cảnh báo mới")}</h2><p className="section-description">{t("Thiết lập điều kiện cảnh báo bạn muốn theo dõi.")}</p></div></div>
 
-      <Field id="template" label={t("Bắt đầu từ luật mẫu")}>
+      <Field id="template" label={t("Mẫu cảnh báo có sẵn")}>
         <select id="template" defaultValue="" onChange={(e) => applyTemplate(e.target.value)}>
-          <option value="">{t("— Chọn luật mẫu —")}</option>
+          <option value="">{t("— Chọn mẫu cảnh báo —")}</option>
           {TEMPLATES.map((item) => <option key={item.id} value={item.id}>{t(item.name)}</option>)}
         </select>
       </Field>
@@ -272,17 +272,17 @@ export default function RuleForm({
       <div className="preview" aria-live="polite">
         <span className="preview-label">{t("Xem trước")}</span>
         <p className="preview-text">
-          {hasErrors ? t("Hoàn tất các trường để xem mô tả luật.") : describeRule(payload, language)}
+          {hasErrors ? t("Hoàn tất các trường để xem mô tả cảnh báo.") : describeRule(payload, language)}
         </p>
       </div>
 
-      {serverError && <p className="banner error" role="alert">{localizedError(serverError) || t("Không thể tạo luật.")}</p>}
-      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {t("Đã lưu luật. Bạn có thể xem trong danh sách bên dưới.")}</p>}
+      {serverError && <p className="banner error" role="alert">{localizedError(serverError) || t("Không thể tạo cảnh báo.")}</p>}
+      {saved && <p className="banner success" role="status"><Icon name="check" size={17} /> {t("Đã tạo cảnh báo. Bạn có thể xem trong danh sách bên cạnh.")}</p>}
 
       <button id="submit-rule" className="btn primary" type="submit" disabled={submitting || !symbols.length}>
-        <Icon name="plus" size={18} />{submitting ? t("Đang lưu…") : t("Lưu luật")}
+        <Icon name="plus" size={18} />{submitting ? t("Đang tạo…") : t("Tạo cảnh báo")}
       </button>
-      <p className="local-note">{t("Được lưu trực tiếp vào cơ sở dữ liệu Redis qua Docker")}</p>
+      <p className="local-note">{t("Cảnh báo được lưu và quản lý trên cơ sở dữ liệu Redis")}</p>
     </form>
   );
 }

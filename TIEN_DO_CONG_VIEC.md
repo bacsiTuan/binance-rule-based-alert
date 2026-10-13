@@ -25,15 +25,19 @@
      - Tạo module `FE/src/api/rulesClient.js` gọi API thật qua proxy `/api`.
      - Cập nhật `FE/src/App.jsx` dùng `createRulesApi`: Tạo, bật/tắt, xóa luật đều được lưu và đồng bộ trực tiếp với Docker Redis.
 
-4. **Tính năng "Create Alert on Mass Index" theo chuẩn TradingView (Mới hoàn thành)**:
+4. **Tính năng "Create Alert on Mass Index" & Modal Popup chuẩn TradingView (Mới hoàn thành)**:
+   - **Nâng cấp UX Modal Popup (Phương án A ⭐)**:
+     - Chuyển toàn bộ Form tạo luật thành **Cửa sổ Modal Popup** hiện đại, mờ nền (`backdrop-filter: blur(8px)`), chuẩn 100% phong cách TradingView với tiêu đề `Create alert on (BTCUSDT)`.
+     - Nút **`+ Tạo cảnh báo mới`** được đặt nổi bật ở đầu thanh Sidebar và trên thanh tiêu đề `page-heading`.
+     - Cột bên phải (1/3 màn hình) được giải phóng hoàn toàn, dành trọn vẹn cho việc quản lý **Danh sách luật đã lưu** và nhật ký tín hiệu.
+     - Hỗ trợ đóng modal linh hoạt bằng nút ✕, click ra ngoài nền mờ, hoặc bấm phím `Escape`.
    - **Bổ sung chỉ báo**: Thêm `mass_index` (Mass Index) với chu kỳ mặc định là 10.
    - **Đầy đủ toán tử**: Bổ sung `>=`, `<=`, `>`, `<`, `Cắt lên (crossup / crossing up)`, `Cắt xuống (crossdown / crossing down)`.
    - **Hỗ trợ 2 dạng luật**:
      - `Indicator - operator - value` (ví dụ: `Mass Index (10) cross_above 9.52`).
      - `Indicator - operator - Indicator` (ví dụ: `EMA(12) cross_above EMA(26)`, `SMA(50) cross_above SMA(200)`).
    - **Tùy chọn TradingView**: Thêm cơ chế kích hoạt `trigger_type` (`Once only`, `Once per bar close`, `Every time`) và trường nhập tin nhắn cảnh báo tùy chỉnh `message`.
-   - **Template 1-click**: Thêm template mẫu "Mass Index (10) cắt lên 9.52 – TradingView Alert" theo đúng file tham khảo `CreateAlertOnTraddingView.md`.
-   - **An toàn giao diện**: Giữ nguyên 100% bố cục và giao diện các component bạn bè đã làm.
+   - **Đồng bộ thuật ngữ theo Hướng A (Chuẩn TradingView ⭐)**: Thống nhất toàn bộ câu chữ trên giao diện sang chuẩn "Cảnh báo" (*Create alert* / *Active alerts*), loại bỏ hoàn toàn sự nhập nhằng giữa "Luật" và "Cảnh báo", tạo trải nghiệm trực quan và đồng bộ 100%.
    - **Kiểm thử**: Vượt qua toàn bộ 10/10 bài kiểm thử tự động của Frontend (`npm test`).
 
 ---
@@ -42,7 +46,7 @@
 
 1. **Đẩy code lên GitHub**:
    - `git add .`
-   - `git commit -m "feat: add mass index alert and tradingview options with redis persistence"`
+   - `git commit -m "feat: add tradingview alert modal and mass index options with redis persistence"`
    - `git push origin feat/rules-crud-redis`
    - Mở Pull Request trên GitHub cho các bạn duyệt.
 2. **Triển khai Rule Engine & Nút Refresh (Epic 3 & Ticket E4-4)**:
