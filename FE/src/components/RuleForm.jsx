@@ -6,6 +6,7 @@ import {
 import { buildPayload, describeRule, initialForm, validateForm } from "../ruleUtils.js";
 import { buildIndicatorRequest } from "../indicatorUtils.js";
 import Icon from "./Icon.jsx";
+import SymbolCombobox from "./SymbolCombobox.jsx";
 
 function Field({ id, label, error, hint, children }) {
   const messageId = `${id}-help`;
@@ -58,11 +59,7 @@ export default function RuleForm({
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
-  const [symbolSearch, setSymbolSearch] = useState("");
   const [saved, setSaved] = useState(false);
-  const filteredSymbols = symbols.filter((symbol) => symbol.includes(symbolSearch.trim().toUpperCase()));
-  const visibleSymbols = filteredSymbols.includes(form.symbol) ? filteredSymbols
-    : symbols.includes(form.symbol) ? [form.symbol, ...filteredSymbols] : filteredSymbols;
 
   useEffect(() => {
     setForm(toFormState(initialRule));
@@ -170,28 +167,22 @@ export default function RuleForm({
       </Field>
 
       <div className="form-step"><span>01</span> {t("Chọn thị trường")}</div>
-      <Field id="symbol-search" label={t("Tìm cặp giao dịch")}>
-        <div className="search-field"><Icon name="search" size={17} /><input id="symbol-search" type="search"
-          placeholder={t("Tìm BTC, ETH, SOL…")} value={symbolSearch}
-          onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
-          onChange={(event) => setSymbolSearch(event.target.value)} /></div>
-        {symbolSearch && <p className="field-hint" role="status">{filteredSymbols.length ? t("{count} cặp phù hợp", { count: filteredSymbols.length }) : t("Không tìm thấy cặp phù hợp. Cặp đang chọn được giữ lại.")}</p>}
-      </Field>
-
       <div className="row">
         <Field id="symbol" label={t("Cặp giao dịch")} error={shown.symbol}>
-          <select
+          <SymbolCombobox
             id="symbol"
             value={form.symbol}
-            onChange={(e) => {
-              const val = e.target.value;
-              setForm({ ...form, symbol: val });
+            symbols={symbols}
+            placeholder={t("Tìm BTC, ETH, SOL…")}
+            loadingText={t("Đang tải…")}
+            emptyText={t("Không tìm thấy cặp phù hợp.")}
+            error={shown.symbol}
+            describedBy={shown.symbol ? "symbol-help" : undefined}
+            onChange={(val) => {
+              setForm((f) => ({ ...f, symbol: val }));
               if (onSymbolChange) onSymbolChange(val);
             }}
-          >
-            {symbols.length === 0 && <option value="">{t("Đang tải…")}</option>}
-            {visibleSymbols.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          />
         </Field>
         <Field id="timeframe" label={t("Khung thời gian")}>
           <select
@@ -231,7 +222,7 @@ export default function RuleForm({
           <select id="operator" value={form.operator} onChange={(e) => setForm({ ...form, operator: e.target.value })}>
             {OPERATORS.map((o) => (
               <option key={o.value} value={o.value} disabled={o.disabled}>
-                {t(o.label)}{o.disabled ? ` — (${t("Vô hiệu hóa")})` : ""}
+                {t(o.label)}{o.disabled ? ` — (${t("Sắp ra mắt")})` : ""}
               </option>
             ))}
           </select>
@@ -255,7 +246,7 @@ export default function RuleForm({
               style={{ opacity: 0.45, cursor: "not-allowed" }}
               title={t("Chỉ áp dụng so sánh với giá trị số")}
             >
-              {t("Chỉ báo")}
+              {t("Chỉ báo")} ({t("Sắp ra mắt")})
             </button>
           </div>
         </div>
@@ -272,10 +263,10 @@ export default function RuleForm({
       <div className="form-step"><span>03</span> {t("Chọn dữ liệu nến")}</div>
 
       <Field id="candle-mode" label={t("Chế độ nến")} hint={t(modeDef?.hint)}>
-        <select id="candle-mode" value={form.candleMode} onChange={(e) => setForm({ ...form, candleMode: e.target.value })}>
+        <select id="candle-mode" value={form.candleMode} disabled onChange={(e) => setForm({ ...form, candleMode: e.target.value })}>
           {CANDLE_MODES.map((m) => (
             <option key={m.value} value={m.value} disabled={m.disabled}>
-              {t(m.label)}{m.disabled ? ` — (${t("Vô hiệu hóa")})` : ""}
+              {t(m.label)}{m.disabled ? ` — (${t("Sắp ra mắt")})` : ""}
             </option>
           ))}
         </select>
@@ -284,7 +275,7 @@ export default function RuleForm({
       <div className="form-step"><span>04</span> {t("Tùy chọn cảnh báo TradingView")}</div>
 
       <Field id="trigger-type" label={t("Cơ chế kích hoạt")}>
-        <select id="trigger-type" value={form.triggerType || "once_per_bar_close"} onChange={(e) => setForm({ ...form, triggerType: e.target.value })}>
+        <select id="trigger-type" value={form.triggerType || "once_per_bar_close"} disabled onChange={(e) => setForm({ ...form, triggerType: e.target.value })}>
           {TRIGGER_TYPES.map((tr) => <option key={tr.value} value={tr.value}>{t(tr.label)}</option>)}
         </select>
       </Field>

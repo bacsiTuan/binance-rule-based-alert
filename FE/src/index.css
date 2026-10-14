@@ -149,6 +149,12 @@ input[type='number'] { font-variant-numeric: tabular-nums; }
 .search-field { display: flex; align-items: center; position: relative; }
 .search-field > svg { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
 .search-field input { padding-left: 37px; background: var(--surface); }
+.combobox { position: relative; }
+.combobox-list { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0; max-height: 220px; overflow-y: auto; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--control-border); border-radius: 8px; background: var(--surface); box-shadow: 0 8px 24px #0000002e; }
+.combobox-option { padding: 8px 10px; border-radius: 6px; font-size: 13px; color: var(--text); cursor: pointer; }
+.combobox-option.active { background: var(--accent-soft); }
+.combobox-option.selected { color: var(--accent-text); font-weight: 600; }
+.combobox-empty { padding: 8px 10px; font-size: 12px; color: var(--muted); }
 input::placeholder { color: var(--muted); }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .group .row { grid-template-columns: minmax(0, 1fr) 110px; }
