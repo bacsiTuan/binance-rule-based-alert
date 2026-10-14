@@ -16,6 +16,8 @@ from app.models import Interval, KlinesResult, Rule, RuleCreate, RuleUpdate, Sym
 from app.rules import RuleStorage
 from app.service import MarketDataService
 from app.service.binance_client import BinanceClient
+from app.service.telegram_client import TelegramClient
+from app.service.telegram_scheduler import TelegramScheduler
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -36,7 +38,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 rules_storage = RuleStorage(redis)
                 await rules_storage.init_seeds()
                 app.state.rules = rules_storage
-                yield
+                async with httpx.AsyncClient(
+                    timeout=settings.telegram_timeout_seconds, follow_redirects=False
+                ) as telegram_http:
+                    watcher = None
+                    if (settings.telegram_enabled and settings.telegram_bot_token
+                            and settings.telegram_chat_id):
+                        watcher = TelegramScheduler(
+                            app.state.service, rules_storage,
+                            TelegramClient(settings, telegram_http),
+                        )
+                        try:
+                            await watcher.start()
+                        except (CacheError, ValueError, RuntimeError):
+                            logging.getLogger(__name__).warning("telegram_start_failed")
+                            await watcher.stop()
+                            watcher = None
+                    elif settings.telegram_enabled:
+                        logging.getLogger(__name__).warning("telegram_disabled_missing_config")
+                    app.state.telegram_watcher = watcher
+                    try:
+                        yield
+                    finally:
+                        if watcher is not None:
+                            await watcher.stop()
         finally:
             await redis.aclose()
 

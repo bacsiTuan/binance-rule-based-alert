@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import logging
 from datetime import UTC, datetime
+from itertools import pairwise
 
 from pydantic import ValidationError
 
@@ -12,7 +13,6 @@ from app.models import Interval, KlinesResult, SymbolsResult
 from app.service.binance_client import BinanceClient
 
 logger = logging.getLogger(__name__)
-
 
 class MarketDataService:
     def __init__(self, settings: Settings, client: BinanceClient, cache: RedisCache):
@@ -85,6 +85,42 @@ class MarketDataService:
             )
 
         return await self._load(key, KlinesResult, self.settings.cache_ttl_seconds, fetch)
+
+    async def closed_klines(self, symbol: str, interval: Interval, boundary: int):
+        duration = {"1h": 3600000, "1d": 86400000, "1w": 604800000}[interval]
+        key = f"{self.prefix}:closed:{symbol}:{interval}:1000:{boundary - 1}"
+
+        def ready(snapshot):
+            candles = snapshot.candles
+            return (
+                snapshot.market == self.settings.binance_market
+                and snapshot.symbol == symbol and snapshot.interval == interval
+                and not snapshot.stale and snapshot.source != "stale"
+                and snapshot.fetched_at.utcoffset() is not None
+                and snapshot.fetched_at.timestamp() * 1000 >= boundary
+                and bool(candles) and candles[-1].close_time == boundary - 1
+                and all(c.close_time - c.open_time == duration - 1 for c in candles)
+                and all(b.open_time == a.close_time + 1 for a, b in pairwise(candles))
+            )
+
+        async with self.refresh_lock:
+            cached = await self._cached(key, KlinesResult)
+            if cached is not None and ready(cached):
+                return cached.model_copy(update={"source": "cache"})
+            candles = await self.client.klines(symbol, interval, 1000, end_time=boundary - 1)
+            snapshot = KlinesResult(
+                market=self.settings.binance_market, symbol=symbol, interval=interval,
+                source="binance", cache_key=key, fetched_at=datetime.now(UTC), candles=candles,
+            )
+            # Incomplete targets must not prevent the next upstream readiness attempt.
+            if not ready(snapshot):
+                return None
+            ttl = self.settings.cache_ttl_seconds
+            await self.cache.set(
+                key, snapshot.model_dump(mode="json"), ttl,
+                max(self.settings.stale_ttl_seconds, ttl + 1),
+            )
+            return snapshot
 
     async def symbols(self):
         async def fetch():
