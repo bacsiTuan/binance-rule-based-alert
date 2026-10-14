@@ -1,11 +1,16 @@
+# pytest tests/test_binance_ws_live.py -v -s
 import asyncio
+import json
 import math
 import time
+from collections.abc import AsyncIterator
 from decimal import InvalidOperation
 from itertools import pairwise
 
 import httpx
 from pydantic import ValidationError
+from websockets.asyncio.client import connect
+from websockets.exceptions import WebSocketException
 
 from app.config import Settings
 from app.errors import BinanceError
@@ -13,12 +18,17 @@ from app.models import Candle, Interval
 
 
 class BinanceClient:
-    """Public REST only. Never submits trades or requires credentials."""
+    """Public market data only. Never submits trades or requires credentials."""
 
     def __init__(self, settings: Settings, http: httpx.AsyncClient):
         self.settings = settings
         self.http = http
         self.prefix = "/api/v3" if settings.binance_market == "spot" else "/fapi/v1"
+        self.ws_url = (
+            "wss://stream.binance.com:9443/ws"
+            if settings.binance_market == "spot"
+            else "wss://fstream.binance.com/market/ws"
+        )
         self.blocked_until = 0.0
         self.blocked_status = 429
 
@@ -100,6 +110,29 @@ class BinanceClient:
             ValidationError,
         ) as exc:
             raise BinanceError("Binance returned malformed candles", retryable=True) from exc
+
+    async def stream_klines(
+        self, symbol: str, interval: Interval, *, connect=connect
+    ) -> AsyncIterator[tuple[Candle, bool]]:
+        """Live kline updates over WebSocket, yielding (candle, is_closed) per event.
+
+        Demo only: not wired into any route or job; the app reads candles via `klines`.
+        """
+        url = f"{self.ws_url}/{symbol.lower()}@kline_{interval}"
+        try:
+            async with connect(url) as ws:
+                async for message in ws:
+                    try:
+                        k = json.loads(message)["k"]
+                        candle = Candle(open_time=k["t"], close=k["c"], close_time=k["T"])
+                        is_closed = bool(k["x"])
+                    except (TypeError, KeyError, ValueError, ValidationError) as exc:
+                        raise BinanceError(
+                            "Binance returned a malformed kline event", retryable=True
+                        ) from exc
+                    yield candle, is_closed
+        except (OSError, WebSocketException) as exc:
+            raise BinanceError("Binance kline stream disconnected", retryable=True) from exc
 
     async def symbols(self) -> list[str]:
         payload = await self._get("exchangeInfo")
