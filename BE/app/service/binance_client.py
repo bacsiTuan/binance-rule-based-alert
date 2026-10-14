@@ -88,10 +88,13 @@ class BinanceClient:
             except ValueError as exc:
                 raise BinanceError("Binance returned invalid JSON", retryable=True) from exc
 
-    async def klines(self, symbol: str, interval: Interval, limit: int) -> list[Candle]:
-        payload = await self._get(
-            "klines", {"symbol": symbol, "interval": interval, "limit": limit}
-        )
+    async def klines(
+        self, symbol: str, interval: Interval, limit: int, *, end_time: int | None = None
+    ) -> list[Candle]:
+        params = {"symbol": symbol, "interval": interval, "limit": limit}
+        if end_time is not None:
+            params["endTime"] = end_time
+        payload = await self._get("klines", params)
         try:
             if not isinstance(payload, list):
                 raise TypeError("Expected a candle list")

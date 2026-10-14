@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     stale_ttl_seconds: int = Field(default=3600, ge=1)
     symbols_ttl_seconds: int = Field(default=3600, ge=1)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
-    telegram_bot_token: str | None = None
+    telegram_enabled: bool = False
+    telegram_timeout_seconds: float = Field(default=10, gt=0, le=60)
+    telegram_bot_token: SecretStr | None = None
     telegram_chat_id: str | None = None
     openai_api_key: str | None = None
     openai_model: str = "gpt-5-mini"

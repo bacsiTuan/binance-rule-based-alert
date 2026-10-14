@@ -1,5 +1,38 @@
 # Binance Rule Based Alert — v1
 
+## Telegram theo nến đóng
+
+Backend đã có scheduler 1h/1d/1w và trạng thái Redis cho cảnh báo Telegram.
+Đã hoàn tất implement và nghiệm thu mock; test live cần opt-in riêng.
+Mặc định `TELEGRAM_ENABLED=false`; chưa nghiệm thu với Telegram thật.
+Xem bằng chứng và giới hạn tại `specs/002-telegram-notifications/quickstart.md`.
+Chỉ rule backend đang bật, SMA/EMA/RSI, `gt`, `gte`, `lt`, `lte`, ngưỡng số và `closed` được quét.
+FE dùng `VITE_USE_MOCK=false`; rule localStorage không tự nhập vào backend.
+`notifications` và `trigger_type` không quyết định tần suất Telegram.
+
+Lịch theo UTC: đầu mỗi giờ, 00:00 mỗi ngày, Thứ Hai 00:00 mỗi tuần, cộng
+5 giây chờ dữ liệu. Ngày/tuần tương ứng 07:00 giờ Việt Nam. Không có SLA 5 giây.
+Chỉ chạy một API worker/replica, không `--reload`; giữ Redis AOF/volume.
+Không retry Telegram hoặc gửi bù. Điều kiện đúng lần đầu gửi một lần;
+chỉ khi nến hợp lệ làm điều kiện sai mới rearm (ví dụ `lt` rearm khi giá trị >= ngưỡng);
+chủ động tắt/bật hoặc sửa điều kiện bắt đầu thế hệ mới. Mất dữ liệu Redis
+không được coi là restart bình thường. Target float cũ không khôi phục độ chính xác gốc.
+Nhiều rule hoặc rate limit có thể làm trễ/bỏ lượt quét; chưa hỗ trợ scale ngang.
+
+Tin hiển thị `Value: 51.66 >= 40`, dùng ký hiệu tương ứng toán tử của rule.
+Giá trị hiển thị làm tròn hai chữ số thập phân; so sánh vẫn dùng Decimal đầy đủ.
+Open/Close hiển thị `yyyy-mm-dd HH:MM:SS`, múi giờ UTC được ghi rõ trong tin.
+
+Cấu hình bí mật chỉ ở `.env` backend: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`,
+`TELEGRAM_TIMEOUT_SECONDS` (mặc định 10). Không in `docker compose config`
+đã resolve hoặc đưa token vào frontend. `compose.yaml` truyền biến vào API.
+Các test live cần opt-in riêng, không tự chạy chỉ vì có credentials:
+
+```sh
+RUN_TELEGRAM_LIVE_TESTS=0 RUN_OPENAI_LIVE_TESTS=0 python -m pytest BE/tests -q
+```
+
+
 Kế hoạch tổng thể, checklist đã hoàn thành và việc còn lại đến 11/10/2026:
 xem [PROJECT_PLAN.md](PROJECT_PLAN.md).
 
@@ -14,7 +47,8 @@ Mặc định dùng **Spot** theo kế hoạch `prototype-project-plan.docx`; c�
 
 Source được tách thành [FE/](FE/README.md) cho frontend và [BE/](BE/README.md)
 cho backend. `BE/` có code Python; `FE/` có giao diện React + Vite quản lý rules
-và biểu đồ TradingView, lấy symbol/chỉ báo từ API thật; luật lưu trong trình duyệt. `compose.yaml`, `.env` của
+và biểu đồ TradingView, lấy symbol/chỉ báo từ API thật; rules dùng CRUD backend
+khi `VITE_USE_MOCK=false`, chỉ lưu trong trình duyệt khi mock. `compose.yaml`, `.env` của
 backend và tài liệu chạy nằm ở thư mục gốc. Cấu hình frontend nằm tại `FE/.env`.
 
 Chạy giao diện bằng `npm ci` rồi `npm run dev` trong `FE/`; xem [README frontend](FE/README.md).
@@ -199,7 +233,8 @@ Phép tính đồng bộ có thể chiếm worker trong thời gian này.
 
 Xem [hợp đồng API](specs/001-calculate-indicators/contracts/indicators-api.md) và
 [kết quả nghiệm thu](specs/001-calculate-indicators/quickstart.md).
-Chưa có rule engine, gửi cảnh báo, CLI chỉ báo hoặc tích hợp frontend chỉ báo.
+Đã có đánh giá rule `gt`/`gte`/`lt`/`lte` với ngưỡng số/nến đóng và cảnh báo Telegram theo lịch;
+chưa có rule engine tổng quát cho mọi toán tử hoặc CLI chỉ báo.
 
 ## Redis và xử lý lỗi
 
@@ -306,7 +341,8 @@ HUONG_DAN_CHAY.md          Hướng dẫn chạy và cấu hình .env
 
 Đã có luồng Binance → Redis và API tính SMA/EMA/RSI Wilder theo yêu cầu.
 FE đã kết nối `/symbols` và `/indicators`, hiển thị metadata nguồn và chính sách nến.
-Rule engine, gửi cảnh báo và lưu rules/alerts tại backend vẫn thuộc các bước tiếp theo.
+Rules lưu tại Redis qua CRUD backend; scheduler gửi Telegram cho phạm vi đã nêu
+ở đầu tài liệu. Rule engine tổng quát và kho lịch sử alerts vẫn ngoài phạm vi.
 
 Tài liệu tham khảo:
 

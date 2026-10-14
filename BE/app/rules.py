@@ -7,6 +7,7 @@ from redis.exceptions import RedisError
 
 from app.errors import CacheError
 from app.models import Rule, RuleCreate, RuleUpdate
+from app.telegram_state import persist_rule
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +156,7 @@ class RuleStorage:
                 enabled=True,
                 created_at=now_str,
             )
-            await self.redis.hset(self.key, str(rule_id), rule.model_dump_json())
+            await persist_rule(self.redis, self.key, rule_id, None, rule)
             return rule
         except RedisError as exc:
             raise CacheError("Cannot save rule to Redis") from exc
@@ -174,14 +175,17 @@ class RuleStorage:
         updated_rule = Rule.model_validate(current_dict)
 
         try:
-            await self.redis.hset(self.key, str(rule_id), updated_rule.model_dump_json())
+            await persist_rule(self.redis, self.key, rule_id, existing, updated_rule)
             return updated_rule
         except RedisError as exc:
             raise CacheError("Cannot update rule in Redis") from exc
 
     async def delete_rule(self, rule_id: int) -> bool:
         try:
-            deleted = await self.redis.hdel(self.key, str(rule_id))
-            return deleted > 0
+            existing = await self.get_rule(rule_id)
+            if existing is None:
+                return False
+            await persist_rule(self.redis, self.key, rule_id, existing, None)
+            return True
         except RedisError as exc:
             raise CacheError("Cannot delete rule from Redis") from exc

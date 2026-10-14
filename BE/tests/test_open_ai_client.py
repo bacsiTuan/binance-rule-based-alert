@@ -1,5 +1,8 @@
 """Calls the real OpenAI API. API tests are skipped unless OPENAI_API_KEY is set in .env."""
 #pytest tests/test_open_ai_client.py -v -s
+import os
+
+import httpx
 import openai
 import pytest
 
@@ -7,9 +10,12 @@ from app.config import Settings
 from app.errors import OpenAIClientError
 from app.service.open_ai_client import OpenAIClient
 
-settings = Settings()
+enabled = os.environ.get("RUN_OPENAI_LIVE_TESTS") == "1"
+settings = Settings() if enabled else Settings(_env_file=None, openai_api_key=None)
 
-live = pytest.mark.skipif(not settings.openai_api_key, reason="OPENAI_API_KEY is not set in .env")
+live = pytest.mark.skipif(
+    not (enabled and settings.openai_api_key), reason="OpenAI live tests require explicit opt-in"
+)
 
 
 @pytest.fixture
@@ -65,8 +71,13 @@ async def test_invalid_api_key_raises_without_leaking_it(make_client):
 
 
 async def test_network_error_raises(make_client):
-    # Nothing listens on port 9, so the real HTTP connection is refused.
-    sdk = openai.AsyncOpenAI(api_key="sk-unused", base_url="http://127.0.0.1:9", max_retries=0)
+    def fail(request):
+        raise httpx.ConnectError("Mock connection failure", request=request)
+
+    sdk = openai.AsyncOpenAI(
+        api_key="sk-unused", max_retries=0,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(fail)),
+    )
 
     with pytest.raises(OpenAIClientError, match="Cannot reach OpenAI"):
         await make_client(sdk, openai_api_key="sk-unused").generate("hi")
