@@ -73,9 +73,14 @@ export default function TradingViewWidget({ symbol = "BTCUSDT", interval = "1d",
       support_host: "https://www.tradingview.com",
     });
 
-    containerRef.current.appendChild(script);
+    // StrictMode runs setup/cleanup once before mounting for real. Defer the
+    // external script so that discarded setup cannot execute against a removed node.
+    const scriptTimer = setTimeout(() => {
+      if (active) container.appendChild(script);
+    }, 0);
     return () => {
       active = false;
+      clearTimeout(scriptTimer);
       clearTimeout(timer);
       observer.disconnect();
       for (const frame of observedFrames) frame.removeEventListener("load", onReady);

@@ -10,6 +10,7 @@ import Icon from "./components/Icon.jsx";
 import MarketAssistant from "./components/MarketAssistant.jsx";
 import { TIMEFRAMES } from "./constants.js";
 import { LocalizedError } from "./i18n.js";
+import { buildIndicatorRequest } from "./indicatorUtils.js";
 
 const ruleStore = createRulesApi(isMock);
 
@@ -36,6 +37,37 @@ export default function App() {
   const [triggerConfirming, setTriggerConfirming] = useState(false);
   const triggerInFlight = useRef(false);
   const triggerRequestId = useRef(null);
+  const alertDialog = useRef(null);
+  const alertDialogOpen = isModalOpen || !!editingRule;
+
+  useEffect(() => {
+    if (!alertDialogOpen) return;
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const dialog = alertDialog.current;
+    const focusableElements = () => [...dialog.querySelectorAll(
+      'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]',
+    )].filter(element => element.getClientRects().length);
+    const keepFocusInside = (event) => {
+      if (event.key !== "Tab") return;
+      const elements = focusableElements();
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    };
+    focusableElements()[0]?.focus();
+    dialog.addEventListener("keydown", keepFocusInside);
+    return () => {
+      dialog.removeEventListener("keydown", keepFocusInside);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
+  }, [alertDialogOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -139,6 +171,13 @@ export default function App() {
   const handleSelectRule = (rule) => {
     if (rule.symbol) setActiveSymbol(rule.symbol);
     if (rule.timeframe) setActiveTimeframe(rule.timeframe);
+    setIndicatorRequest(buildIndicatorRequest(rule));
+  };
+
+  const visibleIndicatorRequest = isModalOpen || editingRule ? indicatorRequest : {
+    ...(indicatorRequest || buildIndicatorRequest({ candle_mode: "closed" })),
+    symbol: activeSymbol,
+    interval: activeTimeframe,
   };
 
   return (
@@ -247,7 +286,7 @@ export default function App() {
           <div className="chart-foot"><span><span className="status-dot" /> {t("Biểu đồ từ TradingView")}</span><span>{t("Nhấn nút Tạo cảnh báo để đặt điều kiện")}</span></div>
         </section>
 
-        <IndicatorPanel request={indicatorRequest} />
+        <IndicatorPanel request={visibleIndicatorRequest} />
         </div>
 
         {/* CỘT 2: 1/3 CÒN LẠI DÀNH TRỌN VẸN CHO QUẢN LÝ DANH SÁCH LUẬT VÀ NÚT TẠO CẢNH BÁO */}
@@ -271,6 +310,7 @@ export default function App() {
               onEdit={(rule) => setEditingRule(rule)}
               onDelete={deleteRule}
               activeSymbol={activeSymbol}
+              activeTimeframe={activeTimeframe}
               onSelectRule={handleSelectRule}
             />
           </div>
@@ -294,6 +334,7 @@ export default function App() {
           role="presentation"
         >
           <div
+            ref={alertDialog}
             className="modal-container"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
