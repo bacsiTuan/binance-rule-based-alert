@@ -1,5 +1,6 @@
 import pytest
 
+from app.models import RuleUpdate
 from app.service.telegram_client import DeliveryResult
 
 
@@ -61,4 +62,19 @@ async def test_send_failure_no_retry_but_new_event_allowed(telegram_harness, sta
         h.market.value = value
         await h.watcher.scan("1h")
         h.clock.advance(3600)
+    assert h.sender.send_message.await_count == 2
+
+
+async def test_manual_trigger_sends_matching_rules_without_touching_state(telegram_harness):
+    h = telegram_harness
+    await h.create()
+    await h.create(target=80)
+    off = await h.create()
+    await h.rules.update_rule(off.id, RuleUpdate(enabled=False))
+    h.clock.advance(65)
+    stats = await h.watcher.trigger_all()
+    assert (stats["scanned"], stats["triggered"], stats["accepted"], stats["skipped"]) == (2, 1, 1, 1)
+    h.sender.send_message.assert_awaited_once()
+    # The scheduled scan still delivers: manual runs share no dedup state.
+    await h.watcher.scan("1h")
     assert h.sender.send_message.await_count == 2

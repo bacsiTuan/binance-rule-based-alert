@@ -14,6 +14,15 @@ export const initialForm = {
 
 const isInt = (v) => Number.isInteger(Number(v)) && String(v).trim() !== "";
 
+// Đọc số người dùng nhập, cho phép dấu phẩy phân cách hàng nghìn: "82,200.06" -> 82200.06.
+// Dấu phẩy sai nhóm ("82,2") bị coi là không hợp lệ thay vì đoán nghĩa.
+export function parseNumber(raw) {
+  if (typeof raw === "number") return raw;
+  const text = String(raw ?? "").trim();
+  if (!/^[+-]?(\d{1,3}(,\d{3})+|\d*)(\.\d+)?$/.test(text) || !/\d/.test(text)) return NaN;
+  return Number(text.replace(/,/g, ""));
+}
+
 function validateLength(length, label, errors, key, language) {
   if (!isInt(length) || Number(length) < 1 || Number(length) > MAX_LENGTH) {
     errors[key] = translate("{label}: chu kỳ phải là số nguyên từ 1 đến {max}.", language,
@@ -31,10 +40,10 @@ export function validateForm(form, language = "en") {
   }
 
   if (form.target.mode === "value") {
-    const raw = form.target.value;
-    if (raw === "" || raw === null || !Number.isFinite(Number(raw))) {
+    const value = parseNumber(form.target.value);
+    if (!Number.isFinite(value)) {
       errors.targetValue = translate("Hãy nhập một con số.", language);
-    } else if (form.left.type === "rsi" && (Number(raw) < 0 || Number(raw) > 100)) {
+    } else if (form.left.type === "rsi" && (value < 0 || value > 100)) {
       errors.targetValue = translate("RSI luôn nằm trong khoảng 0–100.", language);
     }
   } else {
@@ -60,7 +69,7 @@ export function buildPayload(form) {
 
   const target =
     form.target.mode === "value"
-      ? Number(form.target.value)
+      ? parseNumber(form.target.value)
       : { type: form.target.type, length: Number(form.target.length) };
 
   const payload = {

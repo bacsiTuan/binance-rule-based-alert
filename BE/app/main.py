@@ -132,6 +132,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return JSONResponse(status_code=404, content={"detail": "Rule not found"})
         return None
 
+    @app.post("/telegram/trigger")
+    async def trigger_telegram(request: Request):
+        watcher = request.app.state.telegram_watcher
+        if watcher is None:
+            return JSONResponse(
+                status_code=503, content={"detail": "Telegram notifications are not enabled"}
+            )
+        return await watcher.trigger_all()
+
     return app
 
 

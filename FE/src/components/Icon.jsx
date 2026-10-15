@@ -11,6 +11,7 @@ export default function Icon({ name, size = 20, ...props }) {
     search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></>,
     check: <path d="m5 12 4 4L19 6" />,
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5" /></>,
+    send: <path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13" />,
     moon: <path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z" />,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"

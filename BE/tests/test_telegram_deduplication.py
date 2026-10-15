@@ -94,3 +94,15 @@ async def test_missing_data_and_network_failure_keep_latch(telegram_harness):
     h.clock.advance(3580)  # Last readiness pass ended at B+30, not B+5.
     await h.watcher.scan("1h")
     assert h.sender.send_message.await_count == 1
+
+
+async def test_message_is_bold_title_after_rule_id(telegram_harness):
+    h = telegram_harness
+    rule = await h.create(target=40, message="RSI alert ⚡")
+    h.clock.advance(65)
+    await h.watcher.scan("1h")
+    call = h.sender.send_message.await_args
+    title = f"Rule #{rule.id}: RSI alert ⚡"
+    assert call.args[0].startswith(title + "\nMarket: ")
+    assert call.args[0].count("RSI alert") == 1
+    assert call.kwargs["bold_chars"] == len(title)

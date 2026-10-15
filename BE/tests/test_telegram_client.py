@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 
@@ -49,3 +51,18 @@ async def test_unconfirmed_errors_once(failure):
         ), http).send_message("text")
     assert result.status == "unknown"
     assert len(calls) == 1
+
+
+async def test_bold_prefix_sent_as_utf16_entity():
+    bodies = []
+    def handler(request):
+        bodies.append(json.loads(request.content))
+        return httpx.Response(200, json={"ok": True, "result": {"message_id": 1}})
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+        client = TelegramClient(Settings(
+            _env_file=None, telegram_bot_token="fake", telegram_chat_id="1",
+        ), http)
+        await client.send_message("Rule #1: 🚀 up\nbody", bold_chars=13)
+        await client.send_message("plain")
+    assert bodies[0]["entities"] == [{"type": "bold", "offset": 0, "length": 14}]
+    assert "entities" not in bodies[1]

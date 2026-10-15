@@ -21,7 +21,7 @@ async def test_shutdown_cancels_inflight_without_second_send(telegram_harness, m
     entered = asyncio.Event()
     cancelled = asyncio.Event()
 
-    async def blocked(text):
+    async def blocked(text, bold_chars=0):
         entered.set()
         try:
             await asyncio.Event().wait()

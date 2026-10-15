@@ -81,7 +81,7 @@ async def test_end_to_end_without_refresh():
             )
 
     class Sender:
-        async def send_message(self, text):
+        async def send_message(self, text, bold_chars=0):
             calls.append(text)
             return DeliveryResult("accepted", message_id=len(calls))
 

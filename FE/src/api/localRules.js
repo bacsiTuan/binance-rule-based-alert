@@ -20,6 +20,7 @@ export function createLocalRules(mock = false) {
     mock ? MOCK_STORE_KEY : STORE_KEY, JSON.stringify(rules),
   );
   return {
+    triggerAll: async () => { throw new LocalizedError("Chế độ dữ liệu mẫu không gửi được cảnh báo."); },
     getRules: async () => loadRules(mock),
     async createRule(payload) {
       const rules = loadRules(mock);

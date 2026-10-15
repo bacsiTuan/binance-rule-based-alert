@@ -48,11 +48,16 @@ class TelegramClient:
                 logger.addFilter(TelegramLogFilter())
         self.timeout = settings.telegram_timeout_seconds
 
-    async def send_message(self, text: str) -> DeliveryResult:
+    async def send_message(self, text: str, bold_chars: int = 0) -> DeliveryResult:
+        payload = {"chat_id": self.chat_id, "text": text}
+        if bold_chars > 0:
+            # Entities avoid parse_mode escaping; Telegram measures them in UTF-16 units.
+            length = len(text[:bold_chars].encode("utf-16-le")) // 2
+            payload["entities"] = [{"type": "bold", "offset": 0, "length": length}]
         context_token = _telegram_http_active.set(True)
         try:
             response = await self.http.post(
-                self._url, json={"chat_id": self.chat_id, "text": text},
+                self._url, json=payload,
                 timeout=self.timeout, follow_redirects=False,
             )
         except httpx.TransportError:

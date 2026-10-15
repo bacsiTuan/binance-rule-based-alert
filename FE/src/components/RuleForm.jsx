@@ -254,7 +254,7 @@ export default function RuleForm({
         <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
           hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
           <input
-            id="target-value" type="number" step="any" inputMode="decimal"
+            id="target-value" type="text" inputMode="decimal" placeholder="82,200.06"
             value={form.target.value} onChange={(e) => setTarget({ mode: "value", value: e.target.value })}
           />
         </Field>

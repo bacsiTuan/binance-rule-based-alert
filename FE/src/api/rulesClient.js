@@ -33,6 +33,7 @@ export function createRulesApi(isMock = false) {
   }
 
   return {
+    triggerAll: async () => request("/telegram/trigger", { method: "POST" }),
     getRules: async () => request("/rules"),
     createRule: async (payload) =>
       request("/rules", {

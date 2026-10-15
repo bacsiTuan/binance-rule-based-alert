@@ -28,6 +28,9 @@ export default function App() {
   const [activeTimeframe, setActiveTimeframe] = useState("1d");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
+  const [triggering, setTriggering] = useState(false);
+  const [triggerResult, setTriggerResult] = useState(null);
+  const [triggerError, setTriggerError] = useState("");
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -109,6 +112,19 @@ export default function App() {
     }
   };
 
+  const triggerAll = async () => {
+    setTriggering(true);
+    setTriggerResult(null);
+    setTriggerError("");
+    try {
+      setTriggerResult(await ruleStore.triggerAll());
+    } catch (e) {
+      setTriggerError(e);
+    } finally {
+      setTriggering(false);
+    }
+  };
+
   const handleSelectRule = (rule) => {
     if (rule.symbol) setActiveSymbol(rule.symbol);
     if (rule.timeframe) setActiveTimeframe(rule.timeframe);
@@ -153,11 +169,22 @@ export default function App() {
         <button
           type="button"
           className="btn primary heading-action"
-          onClick={() => setIsModalOpen(true)}
+          onClick={triggerAll}
+          disabled={triggering}
         >
-          <Icon name="plus" size={18} /> {t("Tạo cảnh báo")}
+          <Icon name="send" size={18} /> {triggering ? t("Đang kiểm tra…") : t("Kích hoạt tất cả luật")}
         </button>
       </section>
+
+      {triggerError && <div className="banner error" role="alert">{localizedError(triggerError)}</div>}
+      {triggerResult && <p className="banner success" role="status">
+        <Icon name="check" size={16} />
+        {t("Đã kiểm tra {scanned} luật: {triggered} thỏa điều kiện, {accepted} tin nhắn đã gửi, {failed} lỗi, {skipped} bỏ qua.", {
+          scanned: triggerResult.scanned, triggered: triggerResult.triggered,
+          accepted: triggerResult.accepted, failed: triggerResult.failed + triggerResult.unknown,
+          skipped: triggerResult.skipped,
+        })}
+      </p>}
 
       {symbolError && <div className="banner error" role="alert">
         {t("Không tải được symbol")}: {localizedError(symbolError)} <button type="button" className="tv-link-btn"

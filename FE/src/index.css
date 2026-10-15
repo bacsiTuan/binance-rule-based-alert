@@ -141,11 +141,11 @@ h1 { font-size: clamp(25px, 3vw, 32px); line-height: 1.2; margin: 0; font-weight
 .form-step > span, .step-number { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--accent-text); border: 1px solid var(--positive-border); background: var(--accent-soft); border-radius: 5px; padding: 1px 5px; }
 .field { margin-bottom: 14px; min-width: 0; }
 label, .label { display: block; color: var(--subtle-text); font-size: 12px; font-weight: 600; margin-bottom: 6px; }
-select, input[type='number'], input[type='search'] { width: 100%; min-width: 0; min-height: 42px; color: var(--text); border: 1px solid var(--control-border); border-radius: 8px; background: var(--surface); padding: 9px 10px; font-size: 13px; transition: border-color .16s; }
+select, input[type='number'], input[type='text'], input[type='search'] { width: 100%; min-width: 0; min-height: 42px; color: var(--text); border: 1px solid var(--control-border); border-radius: 8px; background: var(--surface); padding: 9px 10px; font-size: 13px; transition: border-color .16s; }
 select { text-overflow: ellipsis; padding-right: 26px; }
 select:hover, input:hover { border-color: var(--hover-border); }
 select:focus, input:focus { border-color: var(--accent-text); }
-input[type='number'] { font-variant-numeric: tabular-nums; }
+input[type='number'], input[inputmode='decimal'] { font-variant-numeric: tabular-nums; }
 .search-field { display: flex; align-items: center; position: relative; }
 .search-field > svg { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
 .search-field input { padding-left: 37px; background: var(--surface); }
@@ -222,7 +222,7 @@ input::placeholder { color: var(--muted); }
   .timeframe-tabs button { min-width: 34px; min-height: 38px; } .chart-body { height: 355px; } .chart-foot { padding: 9px 14px; }
   .indicator-heading { flex-wrap: wrap; } .indicator-heading .section-description { max-width: 190px; } .indicator-heading .tv-link-btn { min-height: 42px; }
   .section-heading { gap: 9px; } .card-title { font-size: 15px; } .section-description { font-size: 11px; }
-  select, input[type='number'], input[type='search'] { min-height: 46px; font-size: 16px; }
+  select, input[type='number'], input[type='text'], input[type='search'] { min-height: 46px; font-size: 16px; }
   .group .row { grid-template-columns: minmax(0, 1fr) 104px; } .row { gap: 10px; } .seg { min-height: 40px; }
   .icon-btn { width: 42px; height: 44px; } .rule { gap: 7px; padding: 10px; }
   .indicator-values strong { font-size: 24px; }

@@ -247,6 +247,90 @@ class TelegramScheduler:
                     return result
         return None
 
+    def _text(self, rule, value, threshold, open_ms, close_ms, message=None):
+        """Return the alert text and the length of its bold title line."""
+        body = (
+            f"Market: {self.service.settings.binance_market}"
+            f" | Symbol: {rule.symbol} | Timeframe: {rule.timeframe}\n"
+            f"Indicator: {rule.indicator.type.upper()}({rule.indicator.length})\n"
+            f"Value: {Decimal(value):.2f} {COMPARISONS[rule.operator][1]} {threshold}\n"
+            "Candle: CLOSED | Timezone: UTC\n"
+            f"Open: {datetime.fromtimestamp(open_ms / 1000, UTC):%Y-%m-%d %H:%M:%S}\n"
+            f"Close: {datetime.fromtimestamp(close_ms / 1000, UTC):%Y-%m-%d %H:%M:%S}"
+        )
+        title = f"Rule #{rule.id}"
+        if message:
+            # Only the user message is trimmed to fit Telegram's 4096 limit.
+            title = f"{title}: {message}"[:max(len(title), 4095 - len(body))]
+        return f"{title}\n{body}", len(title)
+
+    async def trigger_all(self):
+        """Evaluate every stored rule on its latest closed candle right now.
+
+        Sends a Telegram message for each rule whose condition currently holds.
+        Unlike the scheduled scan this does not touch the dedup/latch state, so
+        it never suppresses or duplicates a scheduled alert.
+        """
+        stats = {"scanned": 0, "skipped": 0, "triggered": 0, "accepted": 0,
+                 "failed": 0, "unknown": 0}
+        task = asyncio.current_task()
+        self.tasks.add(task)
+        try:
+            now = self.clock()
+            groups = defaultdict(list)
+            for rule in await self.rules.list_rules():
+                if skip_reason(rule, now) is None:
+                    groups[(rule.symbol, rule.timeframe)].append(rule)
+                else:
+                    stats["skipped"] += 1
+            for (symbol, timeframe), group in groups.items():
+                if self.stopping:
+                    break
+                boundary = boundary_ms(now, timeframe)
+                try:
+                    snapshot = await self.service.closed_klines(symbol, timeframe, boundary)
+                    if snapshot is None or snapshot.stale or snapshot.source == "stale":
+                        stats["skipped"] += len(group)
+                        continue
+                    pairs = sorted({(r.indicator.type, r.indicator.length) for r in group})
+                    request = IndicatorRequest(
+                        symbol=symbol, interval=timeframe, limit=1000, include_open=False,
+                        indicators=[{"name": name, "period": period} for name, period in pairs],
+                    )
+                    results = calculate_indicators(
+                        snapshot, request, int(now.timestamp() * 1000),
+                        self.service.settings.binance_market,
+                    )
+                    values = {(s.name, s.period): s.latest for s in results.results}
+                except (BinanceError, CacheError, RedisError, ValueError, TimeoutError):
+                    stats["skipped"] += len(group)
+                    logger.warning("telegram_manual_group_failed timeframe=%s", timeframe)
+                    continue
+                for rule in group:
+                    point = values[(rule.indicator.type, rule.indicator.length)]
+                    if (point.status != "ok" or point.provisional
+                            or point.close_time != boundary - 1):
+                        stats["skipped"] += 1
+                        continue
+                    stats["scanned"] += 1
+                    if not COMPARISONS[rule.operator][0](
+                            Decimal(point.value), Decimal(str(rule.target))):
+                        continue
+                    stats["triggered"] += 1
+                    text, bold = self._text(rule, point.value, str(rule.target),
+                                            point.open_time, point.close_time, rule.message)
+                    async with self.send_lock:
+                        result = await self.sender.send_message(text, bold_chars=bold)
+                    if result.retry_after:
+                        self.blocked_until = self.monotonic() + result.retry_after
+                    stats[result.status] += 1
+                    logger.info("telegram_manual_delivery rule_id=%s status=%s",
+                                rule.id, result.status)
+        finally:
+            self.tasks.discard(task)
+            logger.info("telegram_manual_trigger counts=%s", stats)
+        return stats
+
     async def deliver(self, rule, generation, event, stats=None):
         try:
             async with self.send_lock:
@@ -259,15 +343,9 @@ class TelegramScheduler:
                     if stats is not None:
                         stats["cancelled"] += 1
                     return
-                text = (
-                    f"Rule #{rule.id}\nMarket: {self.service.settings.binance_market}"
-                    f" | Symbol: {rule.symbol} | Timeframe: {rule.timeframe}\n"
-                    f"Indicator: {rule.indicator.type.upper()}({rule.indicator.length})\n"
-                    f"Value: {Decimal(event.value):.2f} {COMPARISONS[rule.operator][1]} {event.threshold}\n"
-                    "Candle: CLOSED | Timezone: UTC\n"
-                    f"Open: {datetime.fromtimestamp(event.candle_open_ms / 1000, UTC):%Y-%m-%d %H:%M:%S}\n"
-                    f"Close: {datetime.fromtimestamp(event.candle_close_ms / 1000, UTC):%Y-%m-%d %H:%M:%S}"
-                )
+                text, bold = self._text(rule, event.value, event.threshold,
+                                        event.candle_open_ms, event.candle_close_ms,
+                                        current.message)
                 if len(text) > 4096:
                     await self.store.finalize(
                         rule.id, generation, event.event_id, "failed", error_code="message_too_long"
@@ -275,12 +353,10 @@ class TelegramScheduler:
                     if stats is not None:
                         stats["failed"] += 1
                     return
-                if current.message:
-                    text += ("\n" + current.message)[:4096 - len(text)]
                 if stats is not None:
                     stats["attempted"] += 1
                 logger.info("telegram_attempt rule_id=%s event_id=%s", rule.id, event.event_id)
-                result = await self.sender.send_message(text)
+                result = await self.sender.send_message(text, bold_chars=bold)
                 if result.retry_after:
                     self.blocked_until = self.monotonic() + result.retry_after
                 if stats is not None:

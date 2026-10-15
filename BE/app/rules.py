@@ -7,9 +7,29 @@ from redis.exceptions import RedisError
 
 from app.errors import CacheError
 from app.models import Rule, RuleCreate, RuleUpdate
-from app.telegram_state import persist_rule
+from app.telegram_state import fingerprint, persist_rule
 
 logger = logging.getLogger(__name__)
+OPERATOR_LABELS = {
+    "cross_above": "Crossing Up",
+    "cross_below": "Crossing Down",
+    "gt": "Greater Than",
+    "gte": "Greater Than or Equal",
+    "lt": "Less Than",
+    "lte": "Less Than or Equal",
+}
+
+
+def default_message(rule) -> str:
+    ind = rule.indicator
+    left_str = "Price" if ind.type == "close" else f"{ind.type.replace('_', ' ').title()}({ind.length or ''})"
+    target_obj = rule.target
+    if hasattr(target_obj, "type"):
+        right_str = f"{target_obj.type.replace('_', ' ').title()}({target_obj.length})"
+    else:
+        right_str = str(target_obj)
+    op_label = OPERATOR_LABELS.get(rule.operator, rule.operator)
+    return f"{left_str} {op_label} {right_str} on {rule.symbol.upper()}"
 
 DEFAULT_MOCK_RULES = [
     {
@@ -121,25 +141,7 @@ class RuleStorage:
             now_str = datetime.now(timezone.utc).isoformat()
 
             # Tự động tạo message nếu chưa có
-            msg = payload.message
-            if not msg:
-                ind = payload.indicator
-                left_str = "Price" if ind.type == "close" else f"{ind.type.replace('_', ' ').title()}({ind.length or ''})"
-                target_obj = payload.target
-                if hasattr(target_obj, "type"):
-                    right_str = f"{target_obj.type.replace('_', ' ').title()}({target_obj.length})"
-                else:
-                    right_str = str(target_obj)
-                op_map = {
-                    "cross_above": "Crossing Up",
-                    "cross_below": "Crossing Down",
-                    "gt": "Greater Than",
-                    "gte": "Greater Than or Equal",
-                    "lt": "Less Than",
-                    "lte": "Less Than or Equal",
-                }
-                op_label = op_map.get(payload.operator, payload.operator)
-                msg = f"{left_str} {op_label} {right_str} on {payload.symbol.upper()}"
+            msg = payload.message or default_message(payload)
 
             rule = Rule(
                 id=rule_id,
@@ -173,6 +175,10 @@ class RuleStorage:
         current_dict = existing.model_dump()
         current_dict.update(update_dict)
         updated_rule = Rule.model_validate(current_dict)
+        # Message mô tả điều kiện: tạo lại khi điều kiện đổi mà patch không gửi message mới.
+        if (fingerprint(updated_rule) != fingerprint(existing)
+                and updated_rule.message == existing.message):
+            updated_rule.message = default_message(updated_rule)
 
         try:
             await persist_rule(self.redis, self.key, rule_id, existing, updated_rule)
