@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy,
     },
-    preview: { proxy },
+    // `npm start` (prod): nghe mọi interface, cổng lấy từ PORT nếu nền tảng deploy cấp.
+    preview: { proxy, host: true, port: Number(process.env.PORT) || 4173, strictPort: true },
   };
 });
