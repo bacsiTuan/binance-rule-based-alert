@@ -4,7 +4,6 @@ import json
 import fakeredis.aioredis
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from app.cache.redis_cache import RedisCache
 from app.config import Settings
@@ -212,7 +211,7 @@ async def test_corrupt_cache_is_refetched(make_service):
     assert (await service.klines("BTCUSDT")).source == "binance"
 
 
-def test_http_validation_health_and_errors():
+async def test_http_validation_health_and_errors():
     app = create_app(Settings(_env_file=None))
 
     class FakeService:
@@ -226,13 +225,13 @@ def test_http_validation_health_and_errors():
 
     fake = FakeService()
     fake.cache = fake
-    with TestClient(app) as http:
-        app.state.service = fake
+    app.state.service = fake
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as http:
         for params in [{"limit": 0}, {"limit": 1001}, {"interval": "1m"}, {"symbol": "bad:key"}]:
-            assert http.get("/klines", params=params).status_code == 422
-        response = http.get("/klines")
+            assert (await http.get("/klines", params=params)).status_code == 422
+        response = await http.get("/klines")
         assert response.status_code == 429 and response.headers["Retry-After"] == "120"
-        assert http.get("/health").status_code == 503
+        assert (await http.get("/health")).status_code == 503
 
 
 async def test_retries_transient_failure():

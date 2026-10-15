@@ -12,6 +12,22 @@ export const initialForm = {
   message: "",
 };
 
+export function ruleToForm(rule) {
+  if (!rule) return structuredClone(initialForm);
+  return {
+    symbol: rule.symbol || "BTCUSDT",
+    timeframe: rule.timeframe || "1d",
+    left: { type: rule.indicator?.type || "rsi", length: rule.indicator?.length ?? 14 },
+    operator: rule.operator || "lt",
+    target: typeof rule.target === "number"
+      ? { mode: "value", value: rule.target }
+      : { mode: "indicator", type: rule.target.type, length: rule.target.length },
+    candleMode: rule.candle_mode || "closed",
+    triggerType: rule.trigger_type || "once_per_bar_close",
+    message: rule.message || "",
+  };
+}
+
 const isInt = (v) => Number.isInteger(Number(v)) && String(v).trim() !== "";
 
 // Đọc số người dùng nhập, cho phép dấu phẩy phân cách hàng nghìn: "82,200.06" -> 82200.06.

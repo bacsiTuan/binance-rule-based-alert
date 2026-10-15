@@ -1,5 +1,14 @@
 # Binance Rule Based Alert — v1
 
+AI phân tích kèm cảnh báo Telegram và chatbot EN/VI trên giao diện:
+xem [AI_ASSISTANT.md](AI_ASSISTANT.md) để cấu hình và kiểm thử.
+
+Đã đồng bộ đến `8022139` ngày 15/10/2026: hỗ trợ nhập số `82,200.06`,
+tiêu đề Telegram in đậm và cấu hình chạy bản build FE. Nút **Kiểm tra tất cả luật**
+có bước xác nhận, xác thực phía server, giới hạn một lần/phút và mã chống gửi trùng.
+Nó chỉ gửi cho rule đang bật, được hỗ trợ và thỏa điều kiện; không bật mọi rule.
+Gửi thủ công kèm AI khi sẵn sàng, dùng cùng định dạng tin thông thường.
+
 ## Telegram theo nến đóng
 
 Backend đã có scheduler 1h/1d/1w và trạng thái Redis cho cảnh báo Telegram.
@@ -21,7 +30,8 @@ Nhiều rule hoặc rate limit có thể làm trễ/bỏ lượt quét; chưa h�
 
 Tin hiển thị `Value: 51.66 >= 40`, dùng ký hiệu tương ứng toán tử của rule.
 Giá trị hiển thị làm tròn hai chữ số thập phân; so sánh vẫn dùng Decimal đầy đủ.
-Open/Close hiển thị `yyyy-mm-dd HH:MM:SS`, múi giờ UTC được ghi rõ trong tin.
+Mở nến/đóng nến/gửi lúc hiển thị `dd/MM/yyyy HH:mm:ss`, mặc định giờ Việt Nam
+(`UTC+07:00`). `TELEGRAM_TIMEZONE=UTC` để hiển thị UTC; lịch quét vẫn chạy theo UTC.
 
 Cấu hình bí mật chỉ ở `.env` backend: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`,
 `TELEGRAM_TIMEOUT_SECONDS` (mặc định 10). Không in `docker compose config`
@@ -29,7 +39,7 @@ Cấu hình bí mật chỉ ở `.env` backend: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_
 Các test live cần opt-in riêng, không tự chạy chỉ vì có credentials:
 
 ```sh
-RUN_TELEGRAM_LIVE_TESTS=0 RUN_OPENAI_LIVE_TESTS=0 python -m pytest BE/tests -q
+RUN_TELEGRAM_LIVE_TESTS=0 RUN_OPENAI_LIVE_TESTS=0 python -m pytest BE/tests -q --ignore=BE/tests/test_binance_ws_live.py --ignore=BE/tests/test_telegram_client_live.py
 ```
 
 

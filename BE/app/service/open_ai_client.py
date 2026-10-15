@@ -12,11 +12,13 @@ class OpenAIClient:
             raise OpenAIClientError("OPENAI_API_KEY must be set")
         self.model = settings.openai_model
         self.client = client or openai.AsyncOpenAI(
-            api_key=settings.openai_api_key, timeout=settings.openai_timeout_seconds
+            api_key=settings.openai_api_key, timeout=settings.openai_timeout_seconds,
+            max_retries=0,
         )
 
     async def generate(
-        self, user_prompt: str, system_prompt: str | None = None, model: str | None = None
+        self, user_prompt: str | list[dict], system_prompt: str | None = None,
+        model: str | None = None, *, max_output_tokens: int = 3000,
     ) -> str:
         """`model` falls back to OPENAI_MODEL when not given."""
         try:
@@ -24,12 +26,17 @@ class OpenAIClient:
                 model=model or self.model,
                 instructions=system_prompt or openai.omit,
                 input=user_prompt,
+                store=False,
+                max_output_tokens=max_output_tokens,
             )
         except openai.APIStatusError as exc:
-            raise OpenAIClientError(f"OpenAI HTTP {exc.status_code}: {exc.message}") from exc
+            raise OpenAIClientError(f"OpenAI HTTP {exc.status_code}") from exc
         except openai.APIConnectionError as exc:
             raise OpenAIClientError("Cannot reach OpenAI (network error or timeout)") from exc
 
         if not response.output_text:
             raise OpenAIClientError("OpenAI returned an empty answer")
         return response.output_text
+
+    async def aclose(self):
+        await self.client.close()

@@ -1,6 +1,7 @@
 import asyncio
 import os
 import socket
+import sys
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -17,6 +18,10 @@ from app.service.telegram_scheduler import DURATIONS, TelegramScheduler
 
 @pytest.fixture(autouse=True)
 def prevent_network_in_mock_tests(monkeypatch, request):
+    # Windows creates the asyncio self-pipe using a loopback socket connection.
+    # Initialize pytest-asyncio's pinned runner before blocking test networking.
+    if sys.platform == "win32" and request.node.get_closest_marker("asyncio"):
+        request.getfixturevalue("_function_scoped_runner")
     live_modules = {
         "test_telegram_client_live.py": "RUN_TELEGRAM_LIVE_TESTS",
         "test_open_ai_client.py": "RUN_OPENAI_LIVE_TESTS",

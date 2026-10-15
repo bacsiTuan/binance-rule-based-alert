@@ -39,22 +39,17 @@ async def test_initial_true_comparison(telegram_harness, operator, value):
 
 
 async def test_readable_message_format(telegram_harness):
-    from datetime import UTC, datetime
-
     h = telegram_harness
     await h.create(target=40)
     h.market.value = "51.657346496072873893715394643415615554025685290631"
     h.clock.advance(65)
     await h.watcher.scan("1h")
     text = h.sender.send_message.await_args.args[0]
-    boundary = h.calls[0][2]
-    opened = datetime.fromtimestamp((boundary - 3600000) / 1000, UTC)
-    closed = datetime.fromtimestamp((boundary - 1) / 1000, UTC)
-    assert "Value: 51.66 >= 40\n" in text
+    assert "Giá trị: 51.66 >= 40\n" in text
     assert "Threshold:" not in text
-    assert f"Open: {opened:%Y-%m-%d %H:%M:%S}\n" in text
-    assert f"Close: {closed:%Y-%m-%d %H:%M:%S}" in text
-    assert "Timezone: UTC" in text
+    assert "Mở nến: 07/01/2030 06:00:00\n" in text
+    assert "Đóng nến: 07/01/2030 06:59:59" in text
+    assert "Múi giờ: UTC+07:00" in text
 
 
 @pytest.mark.parametrize("values,expected", [
@@ -103,6 +98,6 @@ async def test_message_is_bold_title_after_rule_id(telegram_harness):
     await h.watcher.scan("1h")
     call = h.sender.send_message.await_args
     title = f"Rule #{rule.id}: RSI alert ⚡"
-    assert call.args[0].startswith(title + "\nMarket: ")
+    assert call.args[0].startswith(title + "\nBTCUSDT · SPOT · 1H")
     assert call.args[0].count("RSI alert") == 1
     assert call.kwargs["bold_chars"] == len(title)

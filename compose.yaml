@@ -8,7 +8,7 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       # Inside Docker, Redis is reached by its service name, not localhost.
-      REDIS_URL: redis://:randompasword@redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD:-randompasword}@redis:6379/0
       BINANCE_MARKET: ${BINANCE_MARKET:-spot}
       BINANCE_BASE_URL: ${BINANCE_BASE_URL:-}
       BINANCE_TIMEOUT_SECONDS: ${BINANCE_TIMEOUT_SECONDS:-10}
@@ -17,10 +17,21 @@ services:
       STALE_TTL_SECONDS: ${STALE_TTL_SECONDS:-3600}
       SYMBOLS_TTL_SECONDS: ${SYMBOLS_TTL_SECONDS:-3600}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-true}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TELEGRAM_TIMEOUT_SECONDS: ${TELEGRAM_TIMEOUT_SECONDS:-10}
+      TELEGRAM_TIMEZONE: ${TELEGRAM_TIMEZONE:-Asia/Ho_Chi_Minh}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-60}
+      AI_ENABLED: ${AI_ENABLED:-true}
+      TELEGRAM_AI_ENABLED: ${TELEGRAM_AI_ENABLED:-true}
+      TELEGRAM_AI_LANGUAGE: ${TELEGRAM_AI_LANGUAGE:-vi}
+      TELEGRAM_AI_TIMEOUT_SECONDS: ${TELEGRAM_AI_TIMEOUT_SECONDS:-8}
+      AI_CHAT_REQUESTS_PER_MINUTE: ${AI_CHAT_REQUESTS_PER_MINUTE:-6}
+      TELEGRAM_TEST_ENABLED: ${TELEGRAM_TEST_ENABLED:-false}
+      TELEGRAM_TEST_KEY: ${TELEGRAM_TEST_KEY:-}
     depends_on:
       redis:
         condition: service_healthy
@@ -36,11 +47,11 @@ services:
     image: redis:7.4-alpine
     ports:
       - "0.0.0.0:6379:6379"
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "randompasword"]
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-randompasword}"]
     volumes:
       - redis_data:/data
     environment:
-      REDISCLI_AUTH: randompasword
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-randompasword}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

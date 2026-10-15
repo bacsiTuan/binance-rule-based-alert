@@ -27,7 +27,7 @@ async def test_duplicate_selection_and_message_limit(telegram_harness):
     assert h.sender.send_message.await_count == 2
     texts = [call.args[0] for call in h.sender.send_message.await_args_list]
     assert all(len(text) <= 4096 for text in texts)
-    assert all("Candle: CLOSED" in text and "Timezone: UTC" in text for text in texts)
+    assert all("Nến: Đã đóng" in text and "Múi giờ: UTC+07:00" in text for text in texts)
 
 
 async def test_insufficient_history_no_event(telegram_harness):

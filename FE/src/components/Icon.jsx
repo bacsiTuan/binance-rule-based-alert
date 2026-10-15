@@ -1,5 +1,7 @@
 export default function Icon({ name, size = 20, ...props }) {
   const paths = {
+    sparkles: <><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z" /><path d="m20 2 .7 1.3L22 4l-1.3.7L20 6l-.7-1.3L18 4l1.3-.7L20 2Z" /></>,
+    close: <path d="m6 6 12 12M18 6 6 18" />,
     chart: <><path d="M4 4v16h16" /><path d="m7 14 4-5 4 3 5-7" /></>,
     plus: <><path d="M12 5v14M5 12h14" /></>,
     arrow: <><path d="M7 17 17 7M7 7h10v10" /></>,

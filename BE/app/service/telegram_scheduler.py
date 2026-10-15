@@ -4,16 +4,19 @@ import time
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from types import SimpleNamespace
 
 from apscheduler.events import EVENT_JOB_MAX_INSTANCES, EVENT_JOB_MISSED
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from redis.exceptions import RedisError
 
-from app.errors import BinanceError, CacheError
+from app.errors import BinanceError, CacheError, OpenAIClientError
 from app.indicator_models import IndicatorRequest
 from app.indicators import calculate_indicators
-from app.telegram_state import COMPARISONS, TelegramStateStore
+from app.service.telegram_format import rule_message
+from app.service.trading_assistant import snapshot_context
+from app.telegram_state import COMPARISONS, TelegramStateStore, fingerprint
 
 logger = logging.getLogger(__name__)
 DURATIONS = {"1h": 3600000, "1d": 86400000, "1w": 604800000}
@@ -76,6 +79,7 @@ class TelegramScheduler:
         self.stopping = False
         self.stop_event = asyncio.Event()
         self.last_boundary = {}
+        self.analysis_provider = None
 
     async def start(self):
         try:
@@ -219,7 +223,8 @@ class TelegramScheduler:
                             stats["triggered"] += 1
                             logger.info("telegram_triggered rule_id=%s event_id=%s",
                                         rule.id, event.event_id)
-                            await self.deliver(rule, generation, event, stats)
+                            context = self._analysis_context(snapshot, rule)
+                            await self.deliver(rule, generation, event, stats, context=context)
                     except (CacheError, RedisError, ValueError):
                         logger.warning("telegram_rule_failed rule_id=%s", rule.id)
             except asyncio.CancelledError:
@@ -247,32 +252,24 @@ class TelegramScheduler:
                     return result
         return None
 
-    def _text(self, rule, value, threshold, open_ms, close_ms, message=None):
+    def _text(self, rule, value, threshold, open_ms, close_ms, message=None,
+              *, analysis=None):
         """Return the alert text and the length of its bold title line."""
-        body = (
-            f"Market: {self.service.settings.binance_market}"
-            f" | Symbol: {rule.symbol} | Timeframe: {rule.timeframe}\n"
-            f"Indicator: {rule.indicator.type.upper()}({rule.indicator.length})\n"
-            f"Value: {Decimal(value):.2f} {COMPARISONS[rule.operator][1]} {threshold}\n"
-            "Candle: CLOSED | Timezone: UTC\n"
-            f"Open: {datetime.fromtimestamp(open_ms / 1000, UTC):%Y-%m-%d %H:%M:%S}\n"
-            f"Close: {datetime.fromtimestamp(close_ms / 1000, UTC):%Y-%m-%d %H:%M:%S}"
-        )
-        title = f"Rule #{rule.id}"
-        if message:
-            # Only the user message is trimmed to fit Telegram's 4096 limit.
-            title = f"{title}: {message}"[:max(len(title), 4095 - len(body))]
-        return f"{title}\n{body}", len(title)
+        settings = self.service.settings
+        return rule_message(rule.model_copy(update={"message": message}), value, threshold,
+                            open_ms, close_ms, market=settings.binance_market,
+                            language=settings.telegram_ai_language, zone=settings.telegram_timezone,
+                            sent_at=self.clock(), analysis=analysis)
 
     async def trigger_all(self):
         """Evaluate every stored rule on its latest closed candle right now.
 
         Sends a Telegram message for each rule whose condition currently holds.
-        Unlike the scheduled scan this does not touch the dedup/latch state, so
-        it never suppresses or duplicates a scheduled alert.
+        This does not change scheduled dedup/latch state. A scheduled alert may
+        still be delivered separately. Both use the same notification format.
         """
         stats = {"scanned": 0, "skipped": 0, "triggered": 0, "accepted": 0,
-                 "failed": 0, "unknown": 0}
+                 "failed": 0, "unknown": 0, "cancelled": 0}
         task = asyncio.current_task()
         self.tasks.add(task)
         try:
@@ -317,12 +314,25 @@ class TelegramScheduler:
                             Decimal(point.value), Decimal(str(rule.target))):
                         continue
                     stats["triggered"] += 1
-                    text, bold = self._text(rule, point.value, str(rule.target),
-                                            point.open_time, point.close_time, rule.message)
+                    context = self._analysis_context(snapshot, rule)
+                    event = SimpleNamespace(value=point.value, threshold=str(rule.target),
+                                            candle_open_ms=point.open_time,
+                                            candle_close_ms=point.close_time)
+                    analysis = await self._analysis(rule, event, context)
                     async with self.send_lock:
+                        proceed = await self._wait(max(0, self.blocked_until - self.monotonic()))
+                        current = await self.rules.get_rule(rule.id)
+                        if (not proceed or self.stopping or current is None
+                                or not eligible(current, self.clock())
+                                or fingerprint(current) != fingerprint(rule)):
+                            stats["cancelled"] += 1
+                            continue
+                        text, bold = self._text(current, point.value, str(rule.target),
+                                               point.open_time, point.close_time, current.message,
+                                               analysis=analysis)
                         result = await self.sender.send_message(text, bold_chars=bold)
-                    if result.retry_after:
-                        self.blocked_until = self.monotonic() + result.retry_after
+                        if result.retry_after:
+                            self.blocked_until = self.monotonic() + result.retry_after
                     stats[result.status] += 1
                     logger.info("telegram_manual_delivery rule_id=%s status=%s",
                                 rule.id, result.status)
@@ -331,8 +341,27 @@ class TelegramScheduler:
             logger.info("telegram_manual_trigger counts=%s", stats)
         return stats
 
-    async def deliver(self, rule, generation, event, stats=None):
+    def _analysis_context(self, snapshot, rule):
+        if self.analysis_provider is None:
+            return None
         try:
+            return snapshot_context(snapshot, evaluated_at=int(self.clock().timestamp() * 1000),
+                                    extra_indicators=[(rule.indicator.type, rule.indicator.length)])
+        except ValueError:
+            logger.warning("telegram_ai_context_unavailable rule_id=%s", rule.id)
+            return None
+
+    async def _analysis(self, rule, event, context):
+        if self.analysis_provider is not None and context is not None:
+            try:
+                return await self.analysis_provider.alert_analysis(rule, event, context)
+            except (OpenAIClientError, TimeoutError):
+                logger.warning("telegram_ai_unavailable rule_id=%s", rule.id)
+        return None
+
+    async def deliver(self, rule, generation, event, stats=None, *, context=None):
+        try:
+            analysis = await self._analysis(rule, event, context)
             async with self.send_lock:
                 proceed = await self._wait(max(0, self.blocked_until - self.monotonic()))
                 current = await self.rules.get_rule(rule.id)
@@ -345,7 +374,7 @@ class TelegramScheduler:
                     return
                 text, bold = self._text(rule, event.value, event.threshold,
                                         event.candle_open_ms, event.candle_close_ms,
-                                        current.message)
+                                        current.message, analysis=analysis)
                 if len(text) > 4096:
                     await self.store.finalize(
                         rule.id, generation, event.event_id, "failed", error_code="message_too_long"

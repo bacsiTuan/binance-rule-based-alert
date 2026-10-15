@@ -4,8 +4,11 @@ Tài liệu này dành cho người vừa clone hoặc tải dự án về máy.
 Docker để khởi động **FastAPI backend và Redis**, không cần cài Python hay Redis riêng.
 
 V1 lấy dữ liệu nến từ Binance khi gọi API hoặc CLI, lưu vào Redis và dùng lại cache
-trong 60 giây. Backend có API tính SMA/EMA/RSI; chưa có rule engine hoặc worker tự fetch theo lịch.
-Source backend nằm trong `BE/`; `FE/` lấy symbol/chỉ báo thật từ BE, luật lưu trong trình duyệt.
+trong 60 giây. Backend có API tính SMA/EMA/RSI, CRUD rule trong Redis và scheduler
+Telegram theo nến đóng khi được bật. Luồng market data thông thường vẫn lấy theo request.
+Source backend nằm trong `BE/`; `FE/` lấy symbol/chỉ báo/rule thật từ BE.
+Chỉ chế độ mock mới lưu rule trong trình duyệt. Chatbot và tin phân tích AI cần
+cấu hình riêng: [AI_ASSISTANT.md](AI_ASSISTANT.md).
 Docker Compose chạy backend và Redis. Để chạy giao diện, xem [README frontend](FE/README.md).
 
 Nếu vừa pull code mới, chạy `docker compose up -d --build --wait` tại thư mục gốc.

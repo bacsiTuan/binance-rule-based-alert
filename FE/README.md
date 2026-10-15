@@ -83,9 +83,24 @@ thời điểm lấy dữ liệu, trạng thái thiếu nến và giá trị t�
 Giá trị hiển thị tối đa 6 chữ số thập phân; rê chuột lên giá trị để xem chuỗi đầy đủ.
 Nếu luật chỉ so sánh giá với một số, bảng mặc định tính SMA(20), EMA(14), RSI(14).
 
-Luật được lưu **trong localStorage của trình duyệt**, không gọi `/rules` vì BE
-chưa có CRUD luật hay rule engine. Luật ở chế độ thật và dữ liệu mẫu dùng kho
-riêng; bật/tắt chưa chạy kiểm tra điều kiện hoặc gửi cảnh báo tự động.
+Luật dùng CRUD `/rules` và lưu **Redis** khi `VITE_USE_MOCK=false`.
+Chỉ chế độ mock mới lưu rule trong localStorage. Scheduler Telegram kiểm tra các
+rule được hỗ trợ khi `TELEGRAM_ENABLED=true`; bật rule không tự gửi ngay.
+Nút **Check all rules / Kiểm tra tất cả luật** yêu cầu xác nhận, kiểm tra các rule
+đang bật và gửi tin cho điều kiện đúng. Nó không bật tất cả rule.
+Tin thủ công dùng cùng định dạng với tin theo lịch, kèm AI khi sẵn sàng. Gửi thủ công không thay đổi
+trạng thái chống trùng của scheduler, vì vậy cảnh báo theo lịch vẫn có thể gửi riêng.
+Nút này cần watcher đang bật, `TELEGRAM_TEST_ENABLED=true` và khóa trong `.env` gốc;
+Vite tự nhận khóa cho dashboard local. Xem [AI_ASSISTANT.md](../AI_ASSISTANT.md).
+
+Chatbot AI mở ở góc dưới bên phải. Mục nhỏ **Connection check / Kiểm tra kết nối**
+ở cuối khung chat gửi thử một phân tích AI độc lập với rule, dùng được khi watcher tắt.
+
+Chạy bản build với proxy API bằng `npm.cmd start` trong `FE/`: lệnh build rồi
+chạy Vite preview, mặc định port 5173 hoặc `PORT` của môi trường chạy.
+Nếu truy cập bằng domain, thêm domain cụ thể vào `VITE_ALLOWED_HOSTS` trong `FE/.env`.
+Phần gửi thủ công tự nhận khóa chỉ hoạt động qua localhost/127.0.0.1 trên máy chạy Vite.
+
 Biểu đồ TradingView vẫn lấy dữ liệu trực tiếp từ TradingView; các giá trị trong
 bảng bên cạnh được tính bởi BE, có thể khác widget do snapshot/chính sách nến.
 

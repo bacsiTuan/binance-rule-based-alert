@@ -3,13 +3,14 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 import httpx
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
+from app.assistant_models import ChatRequest, ConfirmedTelegramRequest, TelegramTestRequest
 from app.cache.redis_cache import RedisCache
 from app.config import Settings, get_settings
-from app.errors import BinanceError, CacheError
+from app.errors import BinanceError, CacheError, OpenAIClientError
 from app.indicator_models import IndicatorRequest, IndicatorsResult
 from app.indicators import IndicatorDataError, calculate_indicators, utc_milliseconds
 from app.models import Interval, KlinesResult, Rule, RuleCreate, RuleUpdate, SymbolsResult
@@ -18,6 +19,8 @@ from app.service import MarketDataService
 from app.service.binance_client import BinanceClient
 from app.service.telegram_client import TelegramClient
 from app.service.telegram_scheduler import TelegramScheduler
+from app.service.telegram_test import TelegramTest
+from app.service.trading_assistant import AssistantBusy, TradingAssistant
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -38,16 +41,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 rules_storage = RuleStorage(redis)
                 await rules_storage.init_seeds()
                 app.state.rules = rules_storage
+                assistant = TradingAssistant(settings, app.state.service, rules_storage)
+                app.state.assistant = assistant
                 async with httpx.AsyncClient(
                     timeout=settings.telegram_timeout_seconds, follow_redirects=False
                 ) as telegram_http:
+                    sender = (TelegramClient(settings, telegram_http)
+                              if settings.telegram_bot_token and settings.telegram_chat_id else None)
+                    app.state.telegram_test = TelegramTest(settings, assistant, sender, redis)
                     watcher = None
                     if (settings.telegram_enabled and settings.telegram_bot_token
                             and settings.telegram_chat_id):
                         watcher = TelegramScheduler(
                             app.state.service, rules_storage,
-                            TelegramClient(settings, telegram_http),
+                            sender,
                         )
+                        if settings.telegram_ai_enabled and assistant.available:
+                            watcher.analysis_provider = assistant
                         try:
                             await watcher.start()
                         except (CacheError, ValueError, RuntimeError):
@@ -62,6 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     finally:
                         if watcher is not None:
                             await watcher.stop()
+                        await assistant.aclose()
         finally:
             await redis.aclose()
 
@@ -110,6 +121,51 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def symbols(request: Request):
         return await request.app.state.service.symbols()
 
+    @app.get("/ai/status")
+    async def ai_status(request: Request):
+        test = getattr(request.app.state, "telegram_test", None)
+        return {"available": request.app.state.assistant.available,
+                "telegram_test_available": bool(test and test.available)}
+
+    @app.post("/ai/telegram-test", include_in_schema=False)
+    async def telegram_test(body: TelegramTestRequest, request: Request,
+                            x_telegram_test_key: str | None = Header(default=None, max_length=256)):
+        test = request.app.state.telegram_test
+        if not test.available:
+            return JSONResponse(status_code=404, content={"detail": "telegram_test_disabled"})
+        if not test.authorized(x_telegram_test_key):
+            return JSONResponse(status_code=403, content={"detail": "telegram_test_unauthorized"})
+        try:
+            result = await test.send(body)
+        except AssistantBusy:
+            return JSONResponse(status_code=429, content={"detail": "ai_busy"})
+        except OpenAIClientError:
+            return JSONResponse(status_code=502, content={"detail": "ai_failed"})
+        except IndicatorDataError:
+            return JSONResponse(status_code=502, content={"detail": "ai_data_unavailable"})
+        if result["status"] == "rate_limited":
+            return JSONResponse(status_code=429, headers={"Retry-After": "60"},
+                                content={"detail": "telegram_test_rate_limited"})
+        if result["status"] == "conflict":
+            return JSONResponse(status_code=409, content={"detail": "telegram_test_conflict"})
+        return result
+
+    @app.post("/ai/chat")
+    async def ai_chat(body: ChatRequest, request: Request):
+        assistant = request.app.state.assistant
+        if not assistant.available:
+            return JSONResponse(status_code=503, content={"detail": "ai_unavailable"})
+        try:
+            return await assistant.chat(body)
+        except AssistantBusy:
+            return JSONResponse(status_code=429, headers={"Retry-After": "60"},
+                                content={"detail": "ai_busy", "retry_after": 60})
+        except OpenAIClientError:
+            logging.getLogger(__name__).warning("ai_chat_failed")
+            return JSONResponse(status_code=502, content={"detail": "ai_failed"})
+        except IndicatorDataError:
+            return JSONResponse(status_code=502, content={"detail": "ai_data_unavailable"})
+
     @app.get("/rules", response_model=list[Rule])
     async def list_rules(request: Request):
         return await request.app.state.rules.list_rules()
@@ -133,13 +189,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return None
 
     @app.post("/telegram/trigger")
-    async def trigger_telegram(request: Request):
+    async def trigger_telegram(body: ConfirmedTelegramRequest, request: Request,
+                               x_telegram_test_key: str | None = Header(default=None, max_length=256)):
+        test = request.app.state.telegram_test
+        if not test.delivery_enabled:
+            return JSONResponse(status_code=404, content={"detail": "telegram_test_disabled"})
+        if not test.authorized(x_telegram_test_key):
+            return JSONResponse(status_code=403, content={"detail": "telegram_test_unauthorized"})
         watcher = request.app.state.telegram_watcher
         if watcher is None:
             return JSONResponse(
                 status_code=503, content={"detail": "Telegram notifications are not enabled"}
             )
-        return await watcher.trigger_all()
+        result = await test.trigger_rules(body, watcher)
+        if result["status"] == "rate_limited":
+            return JSONResponse(status_code=429, headers={"Retry-After": "60"},
+                                content={"detail": "telegram_test_rate_limited"})
+        return result
 
     return app
 

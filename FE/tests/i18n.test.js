@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { english, LANGUAGE_KEY, readLanguage, translate, errorMessage, LocalizedError, BackendError } from "../src/i18n.js";
 import { CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TEMPLATES, TIMEFRAMES } from "../src/constants.js";
-import { buildPayload, describeRule, initialForm, parseNumber, validateForm } from "../src/ruleUtils.js";
+import { buildPayload, describeRule, initialForm, parseNumber, ruleToForm, validateForm } from "../src/ruleUtils.js";
 
 test("English is the default; saved Vietnamese is respected and unavailable storage falls back safely", () => {
   assert.equal(readLanguage({ getItem: () => null }), "en");
@@ -11,6 +11,18 @@ test("English is the default; saved Vietnamese is respected and unavailable stor
   assert.equal(readLanguage({ getItem: () => { throw new Error("Storage blocked"); } }), "en");
   assert.equal(translate("Luật đã lưu"), "Saved rules");
   assert.equal(translate("Luật đã lưu", "vi"), "Luật đã lưu");
+});
+
+test("editing existing indicator-to-indicator rules preserves both sides instead of replacing the target with 30", () => {
+  const rule = { symbol: "ETHUSDT", timeframe: "1d", indicator: { type: "sma", length: 50 },
+    operator: "cross_above", target: { type: "sma", length: 200 }, candle_mode: "closed",
+    trigger_type: "once_per_bar_close", message: "Original rule" };
+  const form = ruleToForm(rule);
+  assert.equal(form.target.mode, "indicator");
+  assert.deepEqual(validateForm(form), {});
+  assert.deepEqual(buildPayload(form), rule);
+  form.timeframe = "1h";
+  assert.deepEqual(buildPayload(form).target, rule.target);
 });
 
 test("Every form option and template has an English translation with matching interpolation parameters", () => {

@@ -15,3 +15,9 @@ def test_defaults_and_secret():
 def test_invalid_timeout(value):
     with pytest.raises(ValidationError):
         Settings(_env_file=None, telegram_timeout_seconds=value)
+
+
+def test_alert_ai_timeout_allows_slower_models_but_remains_bounded():
+    assert Settings(_env_file=None, telegram_ai_timeout_seconds=45).telegram_ai_timeout_seconds == 45
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, telegram_ai_timeout_seconds=61)

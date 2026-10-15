@@ -93,7 +93,7 @@ async def test_end_to_end_without_refresh():
         await watcher.scan("1h")
         now += timedelta(hours=1)
     assert len(calls) == 2
-    assert "Candle: CLOSED" in calls[0]
+    assert "Nến: Đã đóng" in calls[0]
     assert ">= 70" in calls[0]
     assert "Threshold:" not in calls[0]
     await rules.update_rule(rule.id, RuleUpdate(enabled=False))
@@ -211,7 +211,7 @@ async def test_http_crud_lifespan_and_restart_with_mock_upstreams(
             assert sum(s["attempted"] for s in stats) == 3
             assert sum(s["accepted"] for s in stats) == 3
             assert len(telegram_calls) == 3
-            assert all(f"Market: {market}" in call["text"] for call in telegram_calls)
+            assert all(f"· {market.upper()} ·" in call["text"] for call in telegram_calls)
             await scheduler_clock.tick(watcher)
             assert len(telegram_calls) == 3
             assert (await api.patch(f"/rules/{ids['1h']}", json={"enabled": False})).status_code == 200

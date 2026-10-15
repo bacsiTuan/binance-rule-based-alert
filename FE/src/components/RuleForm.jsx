@@ -3,7 +3,7 @@ import { cloneElement, useEffect, useMemo, useState } from "react";
 import {
   CANDLE_MODES, LEFT_INDICATORS, OPERATORS, TEMPLATES, TIMEFRAMES, TRIGGER_TYPES, MAX_LENGTH,
 } from "../constants.js";
-import { buildPayload, describeRule, initialForm, validateForm } from "../ruleUtils.js";
+import { buildPayload, describeRule, ruleToForm, validateForm } from "../ruleUtils.js";
 import { buildIndicatorRequest } from "../indicatorUtils.js";
 import Icon from "./Icon.jsx";
 import SymbolCombobox from "./SymbolCombobox.jsx";
@@ -35,34 +35,14 @@ export default function RuleForm({
   const { t, language, localizedError } = useLanguage();
   const isEdit = !!initialRule;
 
-  const toFormState = (rule) => {
-    if (!rule) return structuredClone(initialForm);
-    return {
-      symbol: rule.symbol || "BTCUSDT",
-      timeframe: rule.timeframe || "1d",
-      left: {
-        type: rule.indicator?.type || "rsi",
-        length: rule.indicator?.length ?? 14,
-      },
-      operator: rule.operator || "lt",
-      target: {
-        mode: "value",
-        value: typeof rule.target === "number" ? rule.target : (rule.target?.value ?? 30),
-      },
-      candleMode: rule.candle_mode || "closed",
-      triggerType: rule.trigger_type || "once_per_bar_close",
-      message: rule.message || "",
-    };
-  };
-
-  const [form, setForm] = useState(() => toFormState(initialRule));
+  const [form, setForm] = useState(() => ruleToForm(initialRule));
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setForm(toFormState(initialRule));
+    setForm(ruleToForm(initialRule));
     setTouched(false);
     setServerError("");
     setSaved(false);
@@ -233,31 +213,36 @@ export default function RuleForm({
           <div className="segmented" role="group" aria-labelledby="target-label">
             <button
               type="button"
-              className="seg active"
-              aria-pressed="true"
+              className={`seg ${form.target.mode === "value" ? "active" : ""}`}
+              aria-pressed={form.target.mode === "value"}
+              disabled={form.target.mode !== "value"}
             >
               {t("Giá trị")}
             </button>
             <button
               type="button"
-              className="seg disabled"
+              className={`seg disabled ${form.target.mode === "indicator" ? "active" : ""}`}
               disabled
               aria-disabled="true"
+              aria-pressed={form.target.mode === "indicator"}
               style={{ opacity: 0.45, cursor: "not-allowed" }}
               title={t("Chỉ áp dụng so sánh với giá trị số")}
             >
-              {t("Chỉ báo")} ({t("Sắp ra mắt")})
+              {t("Chỉ báo")}{form.target.mode !== "indicator" && ` (${t("Sắp ra mắt")})`}
             </button>
           </div>
         </div>
 
-        <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
+        {form.target.mode === "indicator" ? <Field id="target-existing" label={t("Chỉ báo đích")}
+          hint={t("Giữ nguyên chỉ báo đích của luật đã lưu. Chọn luật mẫu nếu muốn đổi sang ngưỡng số.")}>
+          <input id="target-existing" type="text" readOnly value={`${form.target.type.toUpperCase()}(${form.target.length})`} />
+        </Field> : <Field id="target-value" label={t("Giá trị")} error={shown.targetValue}
           hint={form.left.type === "rsi" ? t("RSI nằm trong khoảng 0–100.") : undefined}>
           <input
             id="target-value" type="text" inputMode="decimal" placeholder="82,200.06"
             value={form.target.value} onChange={(e) => setTarget({ mode: "value", value: e.target.value })}
           />
-        </Field>
+        </Field>}
       </fieldset>
 
       <div className="form-step"><span>03</span> {t("Chọn dữ liệu nến")}</div>

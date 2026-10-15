@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
@@ -98,8 +98,7 @@ class RuleStorage:
                 for item in DEFAULT_MOCK_RULES:
                     rule = Rule.model_validate(item)
                     await self.redis.hset(self.key, str(rule.id), rule.model_dump_json())
-                    if rule.id > max_id:
-                        max_id = rule.id
+                    max_id = max(max_id, rule.id)
                 await self.redis.set(self.counter_key, str(max_id))
                 logger.info("Initialized %d default rules in Redis", len(DEFAULT_MOCK_RULES))
         except RedisError as exc:
@@ -116,8 +115,8 @@ class RuleStorage:
             try:
                 rule_data = json.loads(raw)
                 rules.append(Rule.model_validate(rule_data))
-            except Exception as exc:
-                logger.warning("Skipping invalid rule payload: %s", exc)
+            except (ValueError, TypeError):
+                logger.warning("Skipping invalid rule payload")
                 continue
         rules.sort(key=lambda r: r.id, reverse=True)
         return rules
@@ -132,13 +131,13 @@ class RuleStorage:
             return None
         try:
             return Rule.model_validate_json(raw)
-        except Exception:
+        except (ValueError, TypeError):
             return None
 
     async def create_rule(self, payload: RuleCreate) -> Rule:
         try:
             rule_id = await self.redis.incr(self.counter_key)
-            now_str = datetime.now(timezone.utc).isoformat()
+            now_str = datetime.now(UTC).isoformat()
 
             # Tự động tạo message nếu chưa có
             msg = payload.message or default_message(payload)
@@ -169,7 +168,7 @@ class RuleStorage:
             return None
 
         update_dict = patch.model_dump(exclude_unset=True)
-        if "symbol" in update_dict and update_dict["symbol"]:
+        if update_dict.get("symbol"):
             update_dict["symbol"] = update_dict["symbol"].upper()
 
         current_dict = existing.model_dump()

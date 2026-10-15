@@ -1,5 +1,5 @@
 import { useLanguage } from "./LanguageContext.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, isMock } from "./api/client.js";
 import { createRulesApi } from "./api/rulesClient.js";
 import IndicatorPanel from "./components/IndicatorPanel.jsx";
@@ -7,7 +7,9 @@ import RuleForm from "./components/RuleForm.jsx";
 import RuleList from "./components/RuleList.jsx";
 import TradingViewWidget from "./components/TradingViewWidget.jsx";
 import Icon from "./components/Icon.jsx";
+import MarketAssistant from "./components/MarketAssistant.jsx";
 import { TIMEFRAMES } from "./constants.js";
+import { LocalizedError } from "./i18n.js";
 
 const ruleStore = createRulesApi(isMock);
 
@@ -31,6 +33,9 @@ export default function App() {
   const [triggering, setTriggering] = useState(false);
   const [triggerResult, setTriggerResult] = useState(null);
   const [triggerError, setTriggerError] = useState("");
+  const [triggerConfirming, setTriggerConfirming] = useState(false);
+  const triggerInFlight = useRef(false);
+  const triggerRequestId = useRef(null);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -113,15 +118,21 @@ export default function App() {
   };
 
   const triggerAll = async () => {
+    if (!triggerConfirming || triggerInFlight.current) return;
+    triggerInFlight.current = true;
     setTriggering(true);
     setTriggerResult(null);
     setTriggerError("");
     try {
-      setTriggerResult(await ruleStore.triggerAll());
+      const result = await ruleStore.triggerAll(triggerRequestId.current);
+      if (result.status === "complete") setTriggerResult(result.stats);
+      else setTriggerError(new LocalizedError("Lần gửi này đang xử lý hoặc chưa có kết quả xác nhận. Kiểm tra Telegram, không gửi lặp lại."));
     } catch (e) {
-      setTriggerError(e);
+      setTriggerError(e instanceof TypeError ? new LocalizedError("Chưa xác định tin đã tới Telegram chưa. Kiểm tra cuộc trò chuyện trước khi gửi thêm.") : e);
     } finally {
+      triggerInFlight.current = false;
       setTriggering(false);
+      setTriggerConfirming(false);
     }
   };
 
@@ -169,20 +180,27 @@ export default function App() {
         <button
           type="button"
           className="btn primary heading-action"
-          onClick={triggerAll}
-          disabled={triggering}
+          onClick={() => { triggerRequestId.current = crypto.randomUUID(); setTriggerConfirming(true); }}
+          disabled={triggering || triggerConfirming}
         >
-          <Icon name="send" size={18} /> {triggering ? t("Đang kiểm tra…") : t("Kích hoạt tất cả luật")}
+          <Icon name="send" size={18} /> {triggering ? t("Đang kiểm tra…") : t("Kiểm tra tất cả luật")}
         </button>
       </section>
 
+      {triggerConfirming && <section className="banner warning trigger-confirmation" aria-label={t("Xác nhận kiểm tra luật")}
+        onKeyDown={event => { if (event.key === "Escape" && !triggering) setTriggerConfirming(false); }}>
+        <p>{t("Kiểm tra các luật đang bật và gửi tin thật tới Telegram nếu thỏa điều kiện? Phân tích AI sẽ được đính kèm khi sẵn sàng.")}</p>
+        <button className="btn primary" type="button" disabled={triggering} onClick={triggerAll}>
+          {triggering ? t("Đang kiểm tra…") : t("Xác nhận kiểm tra và gửi")}</button>
+        <button className="tv-link-btn" type="button" disabled={triggering} onClick={() => setTriggerConfirming(false)}>{t("Hủy")}</button>
+      </section>}
       {triggerError && <div className="banner error" role="alert">{localizedError(triggerError)}</div>}
-      {triggerResult && <p className="banner success" role="status">
+      {triggerResult && <p className={`banner ${triggerResult.failed || triggerResult.unknown ? "warning" : "success"}`} role="status">
         <Icon name="check" size={16} />
-        {t("Đã kiểm tra {scanned} luật: {triggered} thỏa điều kiện, {accepted} tin nhắn đã gửi, {failed} lỗi, {skipped} bỏ qua.", {
+        {t("Đã kiểm tra {scanned} luật: {triggered} thỏa điều kiện, {accepted} tin được chấp nhận, {failed} bị từ chối, {unknown} chưa rõ kết quả, {skipped} bỏ qua, {cancelled} đã hủy.", {
           scanned: triggerResult.scanned, triggered: triggerResult.triggered,
-          accepted: triggerResult.accepted, failed: triggerResult.failed + triggerResult.unknown,
-          skipped: triggerResult.skipped,
+          accepted: triggerResult.accepted, failed: triggerResult.failed, unknown: triggerResult.unknown,
+          skipped: triggerResult.skipped, cancelled: triggerResult.cancelled || 0,
         })}
       </p>}
 
@@ -262,6 +280,8 @@ export default function App() {
       <footer className="footnote">
         {t("Tín hiệu chỉ là cảnh báo, không phải dự đoán hay lời khuyên đầu tư.")}
       </footer>
+
+      <MarketAssistant symbol={activeSymbol} interval={activeTimeframe} />
 
       {/* MODAL POPUP CHUẨN TRADINGVIEW (CREATE / UPDATE ALERT MODAL) */}
       {(isModalOpen || !!editingRule) && (
