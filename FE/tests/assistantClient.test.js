@@ -3,7 +3,7 @@ import test from "node:test";
 import { createAssistantApi } from "../src/api/assistantClient.js";
 import { errorMessage } from "../src/i18n.js";
 
-test("chat sends the selected context and bounded history to the backend", async () => {
+test("chat requests English responses even when the UI uses Vietnamese, preserving context and history", async () => {
   const calls = [];
   const api = createAssistantApi({ fetcher: async (...args) => {
     calls.push(args); return Response.json({ answer: "Conditional analysis" });
@@ -12,7 +12,7 @@ test("chat sends the selected context and bounded history to the backend", async
     history: [{ role: "user", content: "Explain RSI" }] };
   assert.equal((await api.chat(payload)).answer, "Conditional analysis");
   assert.equal(calls[0][0], "/api/ai/chat");
-  assert.deepEqual(JSON.parse(calls[0][1].body), payload);
+  assert.deepEqual(JSON.parse(calls[0][1].body), { ...payload, language: "en" });
 });
 
 test("provider errors are localized without exposing internal messages", async () => {
@@ -37,11 +37,11 @@ test("manual Telegram test sends confirmation without putting the environment ke
   const api = createAssistantApi({ fetcher: async (...args) => {
     calls.push(args); return Response.json({ status: "accepted", replayed: false });
   } });
-  const payload = { request_id: "a-test-id", confirmed: true, symbol: "BTCUSDT", interval: "1h", language: "en" };
+  const payload = { request_id: "a-test-id", confirmed: true, symbol: "BTCUSDT", interval: "1h", language: "vi" };
   assert.equal((await api.telegramTest(payload)).status, "accepted");
   assert.equal(calls[0][0], "/api/ai/telegram-test");
   assert.deepEqual(calls[0][1].headers, { "Content-Type": "application/json" });
-  assert.deepEqual(JSON.parse(calls[0][1].body), payload);
+  assert.deepEqual(JSON.parse(calls[0][1].body), { ...payload, language: "en" });
   assert.ok(!calls[0][1].body.includes("mock-key"));
 });
 

@@ -12,6 +12,7 @@ Website hỗ trợ **English / Tiếng Việt**, mặc định **English**. Ch�
 ở thanh trên để đổi ngôn ngữ; lựa chọn được nhớ trên trình duyệt này. Nhãn,
 luật mẫu, mô tả luật, lỗi form, thông báo và ngày giờ thay đổi theo ngôn ngữ.
 TradingView cũng đổi ngôn ngữ tương ứng. Đổi ngôn ngữ giữ nguyên dữ liệu form và luật đã lưu.
+Riêng câu trả lời chatbot AI và nội dung gửi Telegram luôn bằng tiếng Anh, kể cả khi giao diện chọn VI.
 
 ## Chạy frontend
 

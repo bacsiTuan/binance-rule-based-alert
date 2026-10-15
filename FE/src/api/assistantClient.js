@@ -34,11 +34,11 @@ export function createAssistantApi({ fetcher = globalThis.fetch } = {}) {
     status: ({ signal } = {}) => request("status", { signal }),
     chat: (body, { signal } = {}) => request("chat", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body), signal,
+      body: JSON.stringify({ ...body, language: "en" }), signal,
     }),
     telegramTest: (body) => request("telegram-test", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, language: "en" }),
     }),
   };
 }

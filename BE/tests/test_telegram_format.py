@@ -41,14 +41,15 @@ def test_utc_display_does_not_apply_vietnam_offset_twice():
 
 def test_rule_and_market_messages_share_times_without_manual_labels():
     rule = RuleCreate(symbol="BTCUSDT", timeframe="1d", indicator={"type":"rsi", "length":14},
-                      operator="gte", target=70, message="Momentum confirmation")
+                      operator="gte", target=70, message="Theo dõi động lượng")
     rule = SimpleNamespace(id=7, **rule.model_dump())
     rule.indicator = SimpleNamespace(**rule.indicator)
     text, bold = rule_message(rule, "71.1234", "70", context()["last_open_time"],
                               context()["last_close_time"], market="spot", language="en",
                               zone="Asia/Ho_Chi_Minh", sent_at=datetime(2026, 10, 15, 1, 5, tzinfo=UTC),
                               analysis="Wait for confirmation.")
-    assert text.startswith("Rule #7: Momentum confirmation\nBTCUSDT · SPOT · 1D")
+    assert text.startswith("Rule #7: BTCUSDT · 1D · RSI(14) >= 70\nBTCUSDT · SPOT · 1D")
+    assert rule.message not in text
     assert "Value: 71.12 >= 70" in text
     assert "Close: 15/10/2026 06:59:59" in text
     assert "[MANUAL]" not in text and "TEST" not in text

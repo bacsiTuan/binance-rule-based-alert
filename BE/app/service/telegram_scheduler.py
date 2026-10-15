@@ -258,7 +258,7 @@ class TelegramScheduler:
         settings = self.service.settings
         return rule_message(rule.model_copy(update={"message": message}), value, threshold,
                             open_ms, close_ms, market=settings.binance_market,
-                            language=settings.telegram_ai_language, zone=settings.telegram_timezone,
+                            language="en", zone=settings.telegram_timezone,
                             sent_at=self.clock(), analysis=analysis)
 
     async def trigger_all(self):

@@ -45,11 +45,11 @@ async def test_readable_message_format(telegram_harness):
     h.clock.advance(65)
     await h.watcher.scan("1h")
     text = h.sender.send_message.await_args.args[0]
-    assert "Giá trị: 51.66 >= 40\n" in text
+    assert "Value: 51.66 >= 40\n" in text
     assert "Threshold:" not in text
-    assert "Mở nến: 07/01/2030 06:00:00\n" in text
-    assert "Đóng nến: 07/01/2030 06:59:59" in text
-    assert "Múi giờ: UTC+07:00" in text
+    assert "Open: 07/01/2030 06:00:00\n" in text
+    assert "Close: 07/01/2030 06:59:59" in text
+    assert "Timezone: UTC+07:00" in text
 
 
 @pytest.mark.parametrize("values,expected", [
@@ -93,11 +93,11 @@ async def test_missing_data_and_network_failure_keep_latch(telegram_harness):
 
 async def test_message_is_bold_title_after_rule_id(telegram_harness):
     h = telegram_harness
-    rule = await h.create(target=40, message="RSI alert ⚡")
+    rule = await h.create(target=40, message="Theo dõi chỉ báo ⚡")
     h.clock.advance(65)
     await h.watcher.scan("1h")
     call = h.sender.send_message.await_args
-    title = f"Rule #{rule.id}: RSI alert ⚡"
+    title = f"Rule #{rule.id}: BTCUSDT · 1H · SMA(1) >= 40"
     assert call.args[0].startswith(title + "\nBTCUSDT · SPOT · 1H")
-    assert call.args[0].count("RSI alert") == 1
+    assert "Theo dõi chỉ báo" not in call.args[0]
     assert call.kwargs["bold_chars"] == len(title)

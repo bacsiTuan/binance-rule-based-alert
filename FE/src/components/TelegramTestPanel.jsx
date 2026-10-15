@@ -11,9 +11,9 @@ const outcomes = {
 };
 
 export default function TelegramTestPanel({ api, symbol, interval, onBack, onBusyChange }) {
-  const { t, language, localizedError } = useLanguage();
+  const { t, localizedError } = useLanguage();
   // Freeze context throughout confirmation and delivery, even if the dashboard changes.
-  const [scope] = useState({ symbol, interval, language });
+  const [scope] = useState({ symbol, interval, language: "en" });
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
