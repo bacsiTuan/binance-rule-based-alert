@@ -67,14 +67,15 @@ async def test_manual_analysis_labeled_and_deduplicated_across_service_restarts(
     assert await restarted.send(request) == {"status": status, "replayed": True}
     h.sender.send_message.assert_awaited_once()
     text = h.sender.send_message.call_args.args[0]
-    assert "Nhận định thị trường" in text and "TEST" not in text and "MANUAL" not in text
-    assert "ETHUSDT · Nhận định thị trường" in text and "Conditional AI analysis" in text
-    assert "Đóng nến: 15/10/2026 07:59:59" in text
-    assert "Múi giờ: UTC+07:00" in text
+    assert "Market outlook" in text and "TEST" not in text and "MANUAL" not in text
+    assert "ETHUSDT · Market outlook" in text and "Conditional AI analysis" in text
+    assert "Close: 15/10/2026 07:59:59" in text
+    assert "Timezone: UTC+07:00" in text
+    assert "Nhận định thị trường" not in text
     assert h.sender.send_message.call_args.kwargs["bold_chars"] == len(text.splitlines()[0])
     assert TEST_KEY not in text and len(text) <= 4096
     chat_request = h.assistant.chat.call_args.args[0]
-    assert chat_request.language == "vi" and chat_request.symbol == "ETHUSDT"
+    assert chat_request.language == "en" and chat_request.symbol == "ETHUSDT"
     assert "not a triggered trading rule" in chat_request.message
     assert not h.settings.telegram_enabled  # works without enabling the scheduler
 

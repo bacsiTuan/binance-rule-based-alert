@@ -9,7 +9,7 @@ const assistant = createAssistantApi();
 const suggestions = ["Phân tích cặp đang chọn", "Giải thích RSI và đường trung bình", "Rule nào đang được Telegram hỗ trợ?"];
 
 export default function MarketAssistant({ symbol, interval }) {
-  const { t, language, localizedError, locale } = useLanguage();
+  const { t, localizedError } = useLanguage();
   const [open, setOpen] = useState(false);
   const [available, setAvailable] = useState(null);
   const [testAvailable, setTestAvailable] = useState(false);
@@ -51,7 +51,7 @@ export default function MarketAssistant({ symbol, interval }) {
     setMessages(prev => [...prev, { role: "user", content: question }]);
     setDraft(""); setBusy(true); setError(null); setFailedQuestion("");
     try {
-      const result = await assistant.chat({ message: question, history, symbol, interval, language },
+      const result = await assistant.chat({ message: question, history, symbol, interval, language: "en" },
         { signal: controller.current.signal });
       setMessages(prev => [...prev, { role: "assistant", content: result.answer,
         context: result.context, warnings: result.warnings || [] }]);
@@ -86,11 +86,11 @@ export default function MarketAssistant({ symbol, interval }) {
         </div>}
         {messages.map((message, index) => <article key={index} className={`assistant-message ${message.role}`}>
           <span className="assistant-speaker">{message.role === "user" ? t("Bạn") : t("Trợ lý AI")}</span>
-          <div className="assistant-message-text">{message.content}</div>
-          {message.context && <small className="assistant-source">{message.context.symbol} · {message.context.interval.toUpperCase()} · {t("Nến đóng")}
-            {message.context.last_close_time != null && <> · {new Date(message.context.last_close_time).toLocaleString(locale)}</>}
-            {message.warnings.includes("stale_data") && <> · {t("Dữ liệu cũ")}</>}
-            {message.warnings.includes("insufficient_data") && <> · {t("Một số chỉ báo chưa đủ nến")}</>}
+          <div className="assistant-message-text" lang={message.role === "assistant" ? "en" : undefined}>{message.content}</div>
+          {message.context && <small className="assistant-source" lang="en">{message.context.symbol} · {message.context.interval.toUpperCase()} · Closed candle
+            {message.context.last_close_time != null && <> · {new Date(message.context.last_close_time).toLocaleString("en-GB")}</>}
+            {message.warnings.includes("stale_data") && <> · Stale data</>}
+            {message.warnings.includes("insufficient_data") && <> · Some indicators need more candles</>}
           </small>}
         </article>)}
         {busy && <p className="assistant-thinking" role="status"><span className="assistant-pulse" />{t("Đang đọc dữ liệu và phân tích…")}</p>}

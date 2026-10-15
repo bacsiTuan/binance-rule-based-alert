@@ -59,10 +59,11 @@ def test_snapshot_uses_closed_prices_and_derived_indicators():
     assert all(c["close"] != "99999" for c in context["recent_closes"])
 
 
-async def test_chat_grounds_history_and_language_in_server_data(assistant_harness):
+@pytest.mark.parametrize("language", ["en", "vi"])
+async def test_chat_grounds_history_in_server_data_and_always_answers_in_english(assistant_harness, language):
     h = assistant_harness
     response = await h.assistant.chat(ChatRequest(message="Explain this signal", interval="1h",
-        language="vi", history=[{"role": "user", "content": "What is RSI?"},
+        language=language, history=[{"role": "user", "content": "What is RSI?"},
                                 {"role": "assistant", "content": "An oscillator."}]))
     h.market.klines.assert_awaited_once_with("BTCUSDT", "1h", 300)
     messages, instructions = h.ai.generate.call_args.args
@@ -70,7 +71,9 @@ async def test_chat_grounds_history_and_language_in_server_data(assistant_harnes
     assert messages[0]["role"] == "developer"
     assert context["last_close"] == "399"
     assert messages[-1] == {"role": "user", "content": "Explain this signal"}
-    assert "Vietnamese" in instructions
+    assert "Respond in English" in instructions
+    assert "Always respond in English" in instructions
+    assert "Respond in Vietnamese" not in instructions
     assert response["context"]["last_close_time"] == h.snapshot.candles[-1].close_time
     assert response["warnings"] == []
 
@@ -204,7 +207,7 @@ async def test_telegram_appends_ai_from_same_snapshot_once(telegram_harness):
     await h.watcher.scan("1h")
     h.sender.send_message.assert_awaited_once()
     text = h.sender.send_message.call_args.args[0]
-    assert "AI interpretation" in text and "Nến: Đã đóng" in text
+    assert "AI interpretation" in text and "Candle: CLOSED" in text
     assert len(text) <= 4096
     context = provider.alert_analysis.call_args.args[2]
     assert context["last_close"] == "75"
@@ -265,9 +268,19 @@ async def test_ai_survives_long_title_and_uses_new_bold_format(telegram_harness,
     assert "Verified AI interpretation" in text and len(text) <= 4096
     assert text.startswith(f"Rule #{rule.id}: ")
     assert call.kwargs["bold_chars"] == len(text.splitlines()[0])
-    assert text.count("x" * 20) > 0
+    assert "x" * 20 not in text
+    assert "BTCUSDT · 1H · SMA(1) >= 70" in text
     context = provider.alert_analysis.call_args.args[2]
     assert context["last_close"] == "75"
+
+
+async def test_alert_analysis_uses_english_instructions(assistant_harness):
+    h = assistant_harness
+    rule = RuleCreate(symbol="BTCUSDT", indicator={"type": "rsi", "length": 14},
+                      operator="gte", target=70, message="Theo dõi chỉ báo")
+    event = SimpleNamespace(value="75", threshold="70", candle_open_ms=0, candle_close_ms=3599999)
+    await h.assistant.alert_analysis(rule, event, {"source": "test"})
+    assert "Respond in English" in h.ai.generate.call_args.args[1]
 
 
 @pytest.mark.parametrize("mutation", ["disable", "delete", "threshold"])

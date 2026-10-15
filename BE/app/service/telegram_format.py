@@ -77,8 +77,13 @@ def time_lines(opened, closed, sent_at, zone, language, *, fetched_at=None):
 
 def rule_message(rule, value, threshold, opened, closed, *, market, language,
                  zone, sent_at, analysis=None):
-    title = f"Rule #{rule.id}" + (f": {rule.message}" if rule.message else "")
     vi = language == "vi"
+    description = rule.message if vi else (
+        f"{rule.symbol} · {rule.timeframe.upper()} · "
+        f"{rule.indicator.type.upper()}({rule.indicator.length}) "
+        f"{COMPARISONS[rule.operator][1]} {display_number(threshold)}"
+    )
+    title = f"Rule #{rule.id}" + (f": {description}" if description else "")
     lines = [
         f"{rule.symbol} · {market.upper()} · {rule.timeframe.upper()}", "",
         f"{'Chỉ báo' if vi else 'Indicator'}: {rule.indicator.type.upper()}({rule.indicator.length})",

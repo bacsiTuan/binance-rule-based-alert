@@ -27,11 +27,17 @@ class Settings(BaseSettings):
     openai_timeout_seconds: float = Field(default=60, gt=0)
     ai_enabled: bool = True
     telegram_ai_enabled: bool = True
-    telegram_ai_language: Literal["en", "vi"] = "vi"
+    telegram_ai_language: Literal["en"] = "en"
     telegram_ai_timeout_seconds: float = Field(default=8, gt=0, le=60)
     ai_chat_requests_per_minute: int = Field(default=6, ge=1, le=60)
     telegram_test_enabled: bool = False
     telegram_test_key: SecretStr | None = Field(default=None, min_length=24, max_length=256)
+
+    @field_validator("telegram_ai_language", mode="before")
+    @classmethod
+    def english_notifications(cls, value):
+        # Accept existing .env files while migrating all outgoing responses to English.
+        return "en" if value == "vi" else value
 
     @field_validator("telegram_test_key", mode="before")
     @classmethod

@@ -71,7 +71,7 @@ class TelegramTest:
 
         try:
             result = await self.assistant.chat(ChatRequest(
-                symbol=body.symbol, interval=body.interval, language=body.language,
+                symbol=body.symbol, interval=body.interval, language="en",
                 message=("Prepare a market outlook for the selected pair using closed-candle indicators in at most "
                          "130 words: observation, conditional scenarios/confirmation, and risk. "
                          "This is a market analysis request, not a triggered trading rule. "
@@ -83,7 +83,7 @@ class TelegramTest:
             raise
 
         context = {**result["context"], "symbol": body.symbol, "interval": body.interval}
-        text, bold = market_message(context, result["answer"], language=body.language,
+        text, bold = market_message(context, result["answer"], language="en",
                                     zone=self.settings.telegram_timezone, sent_at=datetime.now(UTC))
         try:
             delivery = await self.sender.send_message(text, bold_chars=bold)

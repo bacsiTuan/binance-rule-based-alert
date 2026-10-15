@@ -16,8 +16,11 @@ Context gồm close price, tối đa 24 giá đóng gần nhất, SMA20/50/200, 
 RSI14 và indicator của rule. AI không có order book, OHLCV đầy đủ hoặc tin tức.
 Không yêu cầu AI tự tạo giá vào lệnh/stop/target khi snapshot không cung cấp cơ sở.
 
-Phần phân tích được nối vào **cùng tin Telegram**, có nhãn `Phân tích AI` hoặc
-`AI analysis`. Tin vẫn chứa rule, symbol, timeframe, giá trị/ngưỡng và thời gian nến gốc.
+Phần phân tích được nối vào **cùng tin Telegram**, có nhãn `AI analysis`.
+Telegram và câu trả lời chatbot luôn dùng tiếng Anh, kể cả khi giao diện chọn tiếng Việt.
+Tiêu đề Telegram được tạo từ điều kiện rule bằng tiếng Anh; mô tả tùy chỉnh vẫn được
+giữ trong rule đã lưu, không được chèn nguyên văn vào tin. Tin chứa rule, symbol,
+timeframe, giá trị/ngưỡng và thời gian nến gốc.
 Toàn tin được giới hạn 4096 ký tự. AI không quyết định điều kiện kích hoạt.
 
 Nếu AI thiếu cấu hình, bận, lỗi hoặc vượt timeout, hệ thống gửi cảnh báo gốc.
@@ -31,7 +34,8 @@ gt/gte/lt/lte trên nến đóng 1h/1d/1w. Cross/Close/target indicator vẫn b�
 ## 2. Chatbot trên dashboard
 
 Nhấn **AI assistant / Trợ lý AI** ở góc dưới bên phải để mở chat.
-Chat theo ngôn ngữ EN/VI đang chọn. Có các câu hỏi gợi ý để phân tích cặp,
+Chat luôn trả lời bằng tiếng Anh; bạn vẫn có thể đặt câu hỏi bằng tiếng Việt.
+Các nhãn và nút trên giao diện tiếp tục theo EN/VI đang chọn. Có các câu hỏi gợi ý để phân tích cặp,
 giải thích RSI/đường trung bình và tìm hiểu Telegram.
 
 Mỗi câu hỏi gửi symbol và timeframe đang chọn tới backend. Backend tự lấy
@@ -60,7 +64,7 @@ OPENAI_MODEL=gpt-5-mini
 OPENAI_TIMEOUT_SECONDS=60
 AI_ENABLED=true
 TELEGRAM_AI_ENABLED=true
-TELEGRAM_AI_LANGUAGE=vi
+TELEGRAM_AI_LANGUAGE=en
 TELEGRAM_AI_TIMEOUT_SECONDS=8
 AI_CHAT_REQUESTS_PER_MINUTE=6
 ```
@@ -68,7 +72,8 @@ AI_CHAT_REQUESTS_PER_MINUTE=6
 - `OPENAI_API_KEY`: điền API key của tài khoản dùng cho tính năng này.
 - `AI_ENABLED=false`: tắt cả chat và phân tích AI, giữ các chức năng market/rule.
 - `TELEGRAM_AI_ENABLED=false`: chỉ tắt phần phân tích Telegram, chat vẫn dùng được.
-- `TELEGRAM_AI_LANGUAGE`: `vi` hoặc `en`; tách khỏi ngôn ngữ của từng tab FE.
+- `TELEGRAM_AI_LANGUAGE=en`: ngôn ngữ trả lời là tiếng Anh. Giá trị `vi` trong
+  `.env` cũ vẫn được chấp nhận và tự chuyển thành `en` để tránh lỗi khi nâng cấp.
 - `TELEGRAM_AI_TIMEOUT_SECONDS`: mặc định 8 giây, tối đa 60; có thể đặt 45 giây cho model chậm.
   AI quá thời gian vẫn dùng cảnh báo gốc; tăng giá trị này sẽ kéo dài thời gian chờ tin.
 - `AI_CHAT_REQUESTS_PER_MINUTE`: mặc định 6 request/phút dùng chung trong một process.
@@ -94,12 +99,14 @@ và không chứng minh API key đã được OpenAI chấp nhận.
   "message": "Phân tích tín hiệu và điều kiện cần xác nhận",
   "symbol": "BTCUSDT",
   "interval": "1h",
-  "language": "vi",
+  "language": "en",
   "history": []
 }
 ```
 
 Trả `answer`, `context`, `model`, `warnings`, `generated_at`.
+`language: "vi"` vẫn được API chấp nhận để tương thích client cũ, nhưng câu trả lời
+chat và tin Telegram luôn bằng tiếng Anh; ngôn ngữ giao diện không thay đổi quy tắc này.
 422 cho request không hợp lệ; 503 khi AI tắt/thiếu cấu hình; 429 khi quá giới hạn;
 502 khi AI hoặc dữ liệu chỉ báo lỗi. Lỗi provider không đưa key/nội dung lỗi thô ra FE.
 Lỗi nguồn Binance/Redis giữ contract hiện có.
@@ -245,14 +252,15 @@ Trên UI đã kiểm tra xác nhận batch, target SMA(200) của rule cũ và n
 Tin nhận định gửi từ dashboard và tin rule (bấm gửi/theo lịch) dùng chung formatter.
 Tiêu đề in đậm bằng Telegram entities; nội dung là plain text, không bật parse_mode.
 Không thêm nhãn TEST/MANUAL vào tin nhận được. Tin nhận định độc lập có tiêu đề
-“BTCUSDT · Nhận định thị trường”; tin rule giữ “Rule #id: mô tả” của hệ thống.
+“BTCUSDT · Market outlook”; tin rule dùng tiêu đề điều kiện bằng tiếng Anh,
+ví dụ “Rule #4: BTCUSDT · 1H · RSI(14) >= 0”. Mô tả tùy chỉnh không được chèn vào tin.
 
 `TELEGRAM_TIMEZONE=Asia/Ho_Chi_Minh` mặc định hiển thị UTC+07:00; có thể chọn `UTC`.
 Biến chỉ đổi thời gian trên tin nhắn. Cron, timestamp lưu Redis và phép lọc nến đóng
 vẫn dùng UTC, không cộng bảy giờ vào lịch chạy hoặc timestamp gốc.
 
-Các dòng Mở nến, Đóng nến và Gửi lúc dùng `dd/MM/yyyy HH:mm:ss`. Tin nhận định còn
-có Cập nhật dữ liệu và Nguồn (Binance/Redis cache); nếu dùng cache cũ thì ghi rõ
+Các dòng `Open`, `Close` và `Sent` dùng `dd/MM/yyyy HH:mm:ss`. Tin nhận định còn
+có `Data updated` và `Source` (Binance/Redis cache); nếu dùng cache cũ thì ghi rõ
 bằng lời thay vì `Stale: True/False`. Thời gian gửi lấy sau khi AI hoàn tất, không
 nhầm với thời gian đóng nến; giờ thiếu/không hợp lệ hiển thị dấu —.
 Nến ngày Binance có thể mở lúc 07:00 và đóng 06:59:59 ngày tiếp theo theo giờ Việt Nam.

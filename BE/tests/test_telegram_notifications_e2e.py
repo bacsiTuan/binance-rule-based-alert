@@ -93,7 +93,7 @@ async def test_end_to_end_without_refresh():
         await watcher.scan("1h")
         now += timedelta(hours=1)
     assert len(calls) == 2
-    assert "Nến: Đã đóng" in calls[0]
+    assert "Candle: CLOSED" in calls[0]
     assert ">= 70" in calls[0]
     assert "Threshold:" not in calls[0]
     await rules.update_rule(rule.id, RuleUpdate(enabled=False))
