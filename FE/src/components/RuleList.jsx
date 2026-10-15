@@ -11,6 +11,7 @@ export default function RuleList({
   onEdit,
   onDelete,
   activeSymbol,
+  activeTimeframe,
   onSelectRule,
 }) {
   const { t, language, localizedError } = useLanguage();
@@ -32,7 +33,7 @@ export default function RuleList({
 
       <ul className="rule-list">
         {sortedRules.map((r) => {
-          const isSelected = activeSymbol === r.symbol;
+          const isSelected = activeSymbol === r.symbol && activeTimeframe === r.timeframe;
           const triggerLabels = {
             once: "Chỉ 1 lần",
             once_per_bar_close: "Mỗi khi đóng nến",
@@ -52,47 +53,49 @@ export default function RuleList({
                   {" · "}{r.enabled ? t("Đang bật") : t("Đang tắt")}
                 </span>
                 {r.message && (
-                  <span style={{ fontSize: "0.75rem", opacity: 0.75, display: "block", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <span className="rule-message">
                     💬 {r.message}
                   </span>
                 )}
               </button>
-              <button
-                type="button"
-                className="icon-btn edit-btn"
-                aria-label={t("Cập nhật cảnh báo {id}", { id: r.id })}
-                title={t("Cập nhật cảnh báo")}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit?.(r);
-                }}
-              >
-                <Icon name="edit" size={16} />
-              </button>
-              <label
-                className="switch"
-                title={r.enabled ? t("Đang bật") : t("Đang tắt")}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  type="checkbox"
-                  checked={r.enabled}
-                  aria-label={t("Bật/tắt cảnh báo {id}", { id: r.id })}
-                  onChange={() => onToggle(r)}
-                />
-                <span className="slider" />
-              </label>
-              <button
-                type="button"
-                className="icon-btn"
-                aria-label={t("Xóa cảnh báo {id}", { id: r.id })}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm(t("Xóa cảnh báo này?"))) onDelete(r.id);
-                }}
-              >
-                <Icon name="trash" size={17} />
-              </button>
+              <div className="rule-actions">
+                <button
+                  type="button"
+                  className="icon-btn edit-btn"
+                  aria-label={t("Cập nhật cảnh báo {id}", { id: r.id })}
+                  title={t("Cập nhật cảnh báo")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.(r);
+                  }}
+                >
+                  <Icon name="edit" size={16} />
+                </button>
+                <label
+                  className="switch"
+                  title={r.enabled ? t("Đang bật") : t("Đang tắt")}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={r.enabled}
+                    aria-label={t("Bật/tắt cảnh báo {id}", { id: r.id })}
+                    onChange={() => onToggle(r)}
+                  />
+                  <span className="slider" />
+                </label>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label={t("Xóa cảnh báo {id}", { id: r.id })}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(t("Xóa cảnh báo này?"))) onDelete(r.id);
+                  }}
+                >
+                  <Icon name="trash" size={17} />
+                </button>
+              </div>
             </li>
           );
         })}
