@@ -11,13 +11,19 @@ export default defineConfig(({ mode }) => {
       rewrite: (path) => path.replace(/^\/api/, ""),
     },
   };
+  // Tên miền được phép truy cập (vd. host EC2), cách nhau bởi dấu phẩy; "*" = cho phép mọi host.
+  const hosts = (env.VITE_ALLOWED_HOSTS || "").split(",").map((h) => h.trim()).filter(Boolean);
+  const allowedHosts = hosts.includes("*") ? true : hosts;
   return {
     plugins: [react()],
     server: {
       port: 5173,
       proxy,
+      allowedHosts,
     },
     // `npm start` (prod): nghe mọi interface, cổng lấy từ PORT nếu nền tảng deploy cấp.
-    preview: { proxy, host: true, port: Number(process.env.PORT) || 4173, strictPort: true },
+    preview: {
+      proxy, allowedHosts, host: true, port: Number(process.env.PORT) || 5173, strictPort: true,
+    },
   };
 });
