@@ -1,5 +1,15 @@
 # Binance Rule Based Alert — v1
 
+## Project report and presentation
+
+The Group 02 submission includes an English report, presentation slides,
+application screenshots, test results and the AI evaluation dataset.
+See [submission files and instructions](report_submission/README_SUBMISSION.md),
+[Word report](report_submission/Group_02_Project_Report.docx),
+[PDF report](report_submission/Group_02_Project_Report.pdf),
+[PowerPoint slides](report_submission/Group_02_Presentation.pptx), or
+[the complete submission ZIP](report_submission/Group_02_Submission.zip).
+
 AI phân tích kèm cảnh báo Telegram và chatbot EN/VI trên giao diện:
 xem [AI_ASSISTANT.md](AI_ASSISTANT.md) để cấu hình và kiểm thử.
 

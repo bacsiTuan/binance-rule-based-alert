@@ -1,0 +1,37 @@
+{
+  "rule_id": 4,
+  "condition": "BTCUSDT 1H RSI(14) >= 0",
+  "next_scheduled_check_vietnam": "2026-10-15T21:00:05+07:00",
+  "expiration_vietnam": "2026-10-15T22:32:32.752816+07:00",
+  "live_delivery": {
+    "rule_id": 4,
+    "result": {
+      "status": "complete",
+      "stats": {
+        "scanned": 1,
+        "skipped": 0,
+        "triggered": 1,
+        "accepted": 1,
+        "failed": 0,
+        "unknown": 0,
+        "cancelled": 0
+      },
+      "replayed": false
+    },
+    "deliveries": [
+      {
+        "ai_included": true,
+        "characters": 927,
+        "has_vietnam_timezone": true,
+        "test_marker_present": false,
+        "status": "accepted",
+        "message_id": 285
+      }
+    ],
+    "ai": [
+      {
+        "answer_received": true
+      }
+    ]
+  }
+}

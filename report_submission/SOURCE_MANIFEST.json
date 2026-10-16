@@ -1,0 +1,703 @@
+{
+  "project": "Rule-Based Alerting on Binance Market Data",
+  "repository": "https://github.com/bacsiTuan/binance-rule-based-alert",
+  "git_head": "62b562227150b1e1dee63b609b70c0cba3d3f3dd",
+  "created_at_utc": "2026-10-16T14:10:20.301374+00:00",
+  "description": "Current working source, including the standalone WebSocket prototype and local supporting changes. Not a claim that every file is committed.",
+  "local_source_changes": [
+    "BE/README.md",
+    "BE/app/service/binance_client.py",
+    "BE/examples/__init__.py",
+    "BE/examples/websocket_demo.py",
+    "BE/tests/test_websocket_demo.py",
+    "WEBSOCKET_DEMO.md"
+  ],
+  "excluded": "Private environment files, Git internals, agent skills, virtual environments, build output and dependency directories.",
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 2209,
+      "sha256": "49ae3edaa548b069c6a39c88fa8cdd433f8bfa1d2571ec8e6a1b0d7d62bc259e"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 156,
+      "sha256": "a4402bf0b49b7d29ed170a5b853791feeae62ab6bbebf152879df592f55eeaa6"
+    },
+    {
+      "path": ".specify/.gitignore",
+      "bytes": 600,
+      "sha256": "5df18166f762bbcc0f7948d11f354f5281ec40a7c6bca9267911f729575dec33"
+    },
+    {
+      "path": ".specify/init-options.json",
+      "bytes": 177,
+      "sha256": "473a786936a454bfa0db6aad33bbd7c6edcd6679ae66eba8ed7e4950362c660d"
+    },
+    {
+      "path": ".specify/integration.json",
+      "bytes": 286,
+      "sha256": "1b7eedf067fdf4b9ed1be630c16ae3152a5c8ad3db2a449539d2972207fde54f"
+    },
+    {
+      "path": ".specify/integrations/codex.manifest.json",
+      "bytes": 1300,
+      "sha256": "a62657ea7e136bbdd2f88f251e8c6744da26735384f4ecb2a1762ffc97829790"
+    },
+    {
+      "path": ".specify/integrations/speckit.manifest.json",
+      "bytes": 1493,
+      "sha256": "14890350fb798be28c2d5c6401478df295237b735ec7868c697098b25140fbaf"
+    },
+    {
+      "path": ".specify/memory/.constitution-template.json",
+      "bytes": 107,
+      "sha256": "36e9c61ac9797211aba27a5dc6dcc20d11419406448c387f7fb2e7a407610d60"
+    },
+    {
+      "path": ".specify/memory/constitution.md",
+      "bytes": 11139,
+      "sha256": "90b3060eadb49bbccd035b671ad4304dc258b82e84d170d299ea3ff392648396"
+    },
+    {
+      "path": ".specify/scripts/bash/check-prerequisites.sh",
+      "bytes": 8440,
+      "sha256": "905d2662968be79367a8136851d7505494c7adc05b6c1ffeadbc9b0385b0cc08"
+    },
+    {
+      "path": ".specify/scripts/bash/common.sh",
+      "bytes": 40448,
+      "sha256": "252ee86c09018ddfd1e5d4a608a2e49ab0daa8d57d99ff42217e89cd803b91d4"
+    },
+    {
+      "path": ".specify/scripts/bash/create-new-feature.sh",
+      "bytes": 19931,
+      "sha256": "b1f7018982634a9ab004c61ffcfebe29414fe483655e961d03eebaaa2a4bd9a4"
+    },
+    {
+      "path": ".specify/scripts/bash/resolve-template.sh",
+      "bytes": 1604,
+      "sha256": "fee1f95fb55f3afd71c5f9c4e4812d34d3718ea1d503388ea6c5cbad9205d3f9"
+    },
+    {
+      "path": ".specify/scripts/bash/setup-plan.sh",
+      "bytes": 2625,
+      "sha256": "8ae0e60bca2981de58797a84fc48a1c0e581e6a1f0300e590ae10511a7c3e9af"
+    },
+    {
+      "path": ".specify/scripts/bash/setup-tasks.sh",
+      "bytes": 3645,
+      "sha256": "aabee0b932587da78405d79b496f14d788e7a41bb3f92ed0692e183fd850eabf"
+    },
+    {
+      "path": ".specify/templates/checklist-template.md",
+      "bytes": 2078,
+      "sha256": "0915ed5d49a922cbf5a23415b13a56adc47145eb489486d3877d48438d043dca"
+    },
+    {
+      "path": ".specify/templates/constitution-template.md",
+      "bytes": 2396,
+      "sha256": "29fc1837b20f493d302203554923322a245123b4be9ed5734d9e1af96cd5ef0b"
+    },
+    {
+      "path": ".specify/templates/plan-template.md",
+      "bytes": 3795,
+      "sha256": "eddcad4c5b6fcefb81a29b0495d060a87764ed89cc3d393f04aabcc40ad3e688"
+    },
+    {
+      "path": ".specify/templates/spec-template.md",
+      "bytes": 4687,
+      "sha256": "cfc2f4605b4366d798d184956ca848a8301ad701d548e0c2c1a33ad7aeda7289"
+    },
+    {
+      "path": ".specify/templates/tasks-template.md",
+      "bytes": 9423,
+      "sha256": "85d2141d85f50f124874a9579b4410f4e6c0049e36a478e972b451e43bec8fca"
+    },
+    {
+      "path": ".specify/workflows/speckit/workflow.yml",
+      "bytes": 2192,
+      "sha256": "ea636ff77e01aafdd5d44097e16d47ddb62264ea66b09b63f560aa4d543af082"
+    },
+    {
+      "path": ".specify/workflows/workflow-registry.json",
+      "bytes": 381,
+      "sha256": "bcf03423d08b6c067846b6495c61a4ef0b59800f8d7f155a6fc784d6f1ff0e7e"
+    },
+    {
+      "path": "AI_ASSISTANT.md",
+      "bytes": 21055,
+      "sha256": "1572e1eb9adc28a9ecbf6d7f6b7a04e7f0ea24e1b20922484e18b8db7460b598"
+    },
+    {
+      "path": "BE/.dockerignore",
+      "bytes": 122,
+      "sha256": "6d2bb02dc3b0678c5096b7bb63f388e6644d9ed35fc83a219aeaee5c89044ff4"
+    },
+    {
+      "path": "BE/Dockerfile",
+      "bytes": 453,
+      "sha256": "ee32896ae570fbbc81ecca6e401814bde096a103e2cfc6f188cb59247f22660f"
+    },
+    {
+      "path": "BE/README.md",
+      "bytes": 3862,
+      "sha256": "d97465318f5ee52ee19dd78e10f3c7aac1b6e3493d59c65aa8558453f19ca491"
+    },
+    {
+      "path": "BE/app/__init__.py",
+      "bytes": 49,
+      "sha256": "57637e5d7aa5f408d80839872fac3e300927e0c50d848bb0e35a45882bc020d7"
+    },
+    {
+      "path": "BE/app/assistant_models.py",
+      "bytes": 1737,
+      "sha256": "92345f3c941c8705016d8d0856dbfe4f66b907528c443a757f47eb37e375e1c4"
+    },
+    {
+      "path": "BE/app/cache/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "BE/app/cache/redis_cache.py",
+      "bytes": 1604,
+      "sha256": "15b03c44e1efb06ea4111a3bfd78a828c24d7a8a79852cd103bffc4bfdaafbef"
+    },
+    {
+      "path": "BE/app/cli.py",
+      "bytes": 1637,
+      "sha256": "bf314eceea515eddf443121cecd97f7a3e3ab8a20911baf19e8481f54dbf127e"
+    },
+    {
+      "path": "BE/app/config.py",
+      "bytes": 2616,
+      "sha256": "057c9cc25e0681acee1c45ce026324e697d16c82176ea09ad93adf289c872fac"
+    },
+    {
+      "path": "BE/app/errors.py",
+      "bytes": 510,
+      "sha256": "60fcb1b35af2b4e785ca7cd1d7e2921e86a2ad144a278ef4c228e81aee39be84"
+    },
+    {
+      "path": "BE/app/indicator_models.py",
+      "bytes": 2337,
+      "sha256": "4ac2e24e84926dabf7b87ce8261daa3440fc2e3cd9259c665559b08867073310"
+    },
+    {
+      "path": "BE/app/indicators.py",
+      "bytes": 7012,
+      "sha256": "6d601cf1f2b916ee200a583971c5e62d6a9feb04f2b634b4c43237b4fc700f14"
+    },
+    {
+      "path": "BE/app/main.py",
+      "bytes": 10533,
+      "sha256": "65eeaff5d23ef6d41523ddc9e6044099b39b23661d88fd2f8c138735a9cbb9a6"
+    },
+    {
+      "path": "BE/app/models.py",
+      "bytes": 2831,
+      "sha256": "150302bf48e83e5a91543c7f496152476db7fb6200d0d94f6f1b389ad97f6960"
+    },
+    {
+      "path": "BE/app/rules.py",
+      "bytes": 7289,
+      "sha256": "e952a12f4be63317e9b3d3325d1916c690c74669050baaa54b69fc1b3d79f68c"
+    },
+    {
+      "path": "BE/app/service/__init__.py",
+      "bytes": 90,
+      "sha256": "de2a010fe124ca85f519c24a34616110293c16e6502e03386e2aa6aff512fc6f"
+    },
+    {
+      "path": "BE/app/service/binance_client.py",
+      "bytes": 6870,
+      "sha256": "d5a59a2488a347bf3030bf1b8a94a76432c607339a22e8111aac320e8c79f9cb"
+    },
+    {
+      "path": "BE/app/service/market_data.py",
+      "bytes": 6025,
+      "sha256": "756ee05e502838f3b087ae191ccf2d350855b3abd0791bb2c7aa59d0e0623ac5"
+    },
+    {
+      "path": "BE/app/service/open_ai_client.py",
+      "bytes": 1662,
+      "sha256": "6e70b60f688b58b008d3382fdddb65e09022f56408c71df24d91a1e15c77e82b"
+    },
+    {
+      "path": "BE/app/service/telegram_client.py",
+      "bytes": 4247,
+      "sha256": "1f67988a09c86ef6d0fa325175061ffad9b01a20403fabd72b3b7a7cdbc97030"
+    },
+    {
+      "path": "BE/app/service/telegram_format.py",
+      "bytes": 4857,
+      "sha256": "4ec48d155c9dd3cfdb44c3dd67080037bcd62c6b575aac32d463f7d567bf1526"
+    },
+    {
+      "path": "BE/app/service/telegram_scheduler.py",
+      "bytes": 19795,
+      "sha256": "5fef50a2c37c8a7bf816809e8088d1565b818f76a415952721f3c1ada7c7c98f"
+    },
+    {
+      "path": "BE/app/service/telegram_test.py",
+      "bytes": 4878,
+      "sha256": "757298550c3d152bb02dc3bf2cbdb27aa3c8128eacba8f0e6a64906cff467bdd"
+    },
+    {
+      "path": "BE/app/service/trading_assistant.py",
+      "bytes": 9316,
+      "sha256": "2f6fad9aaccc592d641766c33f179f080dafd3c470d400f61142bb03960e95c7"
+    },
+    {
+      "path": "BE/app/telegram_state.py",
+      "bytes": 13084,
+      "sha256": "8277fee18978b0ce32b104f2b2bc8f037b64fd896e3b53f5fad6d470058988f1"
+    },
+    {
+      "path": "BE/examples/__init__.py",
+      "bytes": 83,
+      "sha256": "40dd1a1c9ff1440616aa9eba2e26f3e3f9770b92fdf85c4a982ad30190598af1"
+    },
+    {
+      "path": "BE/examples/websocket_demo.py",
+      "bytes": 5849,
+      "sha256": "383e30bddcfc3bb3a4923331a9ca80d72a585d1481c4dcd3c1569d5fa0555eb2"
+    },
+    {
+      "path": "BE/pyproject.toml",
+      "bytes": 907,
+      "sha256": "be8c500e1f7f58e1b47ab0275191d4f08bdbd28962ff0d82af5140a6d9927782"
+    },
+    {
+      "path": "BE/requirements.lock.txt",
+      "bytes": 730,
+      "sha256": "5e66727084447049f6aadd909ed3801fd7f1dcf26e9e8cd8c017e800ab6b5fc0"
+    },
+    {
+      "path": "BE/tests/conftest.py",
+      "bytes": 4982,
+      "sha256": "56bae8749be69b640fe59fb528b81361ae03d905b89498ef2370bce7e7ca4026"
+    },
+    {
+      "path": "BE/tests/test_binance_ws_live.py",
+      "bytes": 2048,
+      "sha256": "6fe1ea98021db45f93e254ba3e274e3c6a8764b84011c517bd5780c2e60f50a7"
+    },
+    {
+      "path": "BE/tests/test_closed_klines.py",
+      "bytes": 6186,
+      "sha256": "d9e257233e60fcc1b80768e8d4b0b809a3cf27633ddd9ba6cd13a07187d959e6"
+    },
+    {
+      "path": "BE/tests/test_indicators.py",
+      "bytes": 9155,
+      "sha256": "a0f3d2edf1e093391cd662ddf6e7901b94ffeccf67341aa81e4097efdf95a137"
+    },
+    {
+      "path": "BE/tests/test_indicators_api.py",
+      "bytes": 14262,
+      "sha256": "f965561e645540face7715bc8d79e436c7f4e9559190c640c94da48952a9fdaf"
+    },
+    {
+      "path": "BE/tests/test_market_data.py",
+      "bytes": 9199,
+      "sha256": "880f9246e6b1a72c533686fe3917946b7bcd5b640f1a580de0cf6d0bce56f76d"
+    },
+    {
+      "path": "BE/tests/test_open_ai_client.py",
+      "bytes": 2863,
+      "sha256": "51b64705762ef99925fd6718c6c99af56c5cf1575e3f6559980cb2c6c6ed9766"
+    },
+    {
+      "path": "BE/tests/test_rules_telegram_metadata.py",
+      "bytes": 2793,
+      "sha256": "7b291ec839656c1defae0f18d105f3fcdcb22d5fd81f335ffe15c88f605958ac"
+    },
+    {
+      "path": "BE/tests/test_telegram_client.py",
+      "bytes": 3026,
+      "sha256": "6e377e90b7157346f2168a85e29fad4765d5cbbb80e47a2a7c4978cd2aae5f6a"
+    },
+    {
+      "path": "BE/tests/test_telegram_client_live.py",
+      "bytes": 1384,
+      "sha256": "bd3f5540ea0e371e31f0a130859dd2ef72840dbda7ac2e7d79dcc5ae625d970a"
+    },
+    {
+      "path": "BE/tests/test_telegram_config.py",
+      "bytes": 1124,
+      "sha256": "38c0c4102b35181c8abfc748a7fe4a5df574b4cc54e8c81003aaf5056032b54a"
+    },
+    {
+      "path": "BE/tests/test_telegram_deduplication.py",
+      "bytes": 3991,
+      "sha256": "79aa1ca6558a46d4d2c5cd3411af2017e2bb3d7e8ff04b0b6a810ca0c9e54dde"
+    },
+    {
+      "path": "BE/tests/test_telegram_evaluation.py",
+      "bytes": 3069,
+      "sha256": "24e3a73e28158610ecc5640914ccde572c9938c10f8281b0be4578e54de7d445"
+    },
+    {
+      "path": "BE/tests/test_telegram_format.py",
+      "bytes": 4709,
+      "sha256": "efbb581352b446b16147cc427502514e533f7b229b4c5e18b57145657c169cc2"
+    },
+    {
+      "path": "BE/tests/test_telegram_lifecycle.py",
+      "bytes": 8040,
+      "sha256": "24aedaf205a38d0e48aeb258e150ad6dbf7ac9a829fa11ac9f5ed4603aeea158"
+    },
+    {
+      "path": "BE/tests/test_telegram_live_gate.py",
+      "bytes": 2195,
+      "sha256": "cff88db89fc088d5ed76d10e341eeecc4f4a9958a79164676efd2f55cfbbc227"
+    },
+    {
+      "path": "BE/tests/test_telegram_manual_test.py",
+      "bytes": 10284,
+      "sha256": "24ae6971766fd32a1bd39aee0517381427008b4964cc6e19e870d8be2b270be2"
+    },
+    {
+      "path": "BE/tests/test_telegram_notifications_e2e.py",
+      "bytes": 10917,
+      "sha256": "b741618c2e0ed429c327e57a7abfe3558b08f91f36eee6b20369fe5c92608494"
+    },
+    {
+      "path": "BE/tests/test_telegram_recovery.py",
+      "bytes": 5913,
+      "sha256": "362e2b17c0c71b3f745f02d4229d452bb179f9e2df11586ecc9384ee94bb7b35"
+    },
+    {
+      "path": "BE/tests/test_telegram_schedule.py",
+      "bytes": 8017,
+      "sha256": "d5e17ff46b1ca88240b569ba24d7a0519c3ebddf6129fa7558421f75a0de10f2"
+    },
+    {
+      "path": "BE/tests/test_telegram_security.py",
+      "bytes": 1238,
+      "sha256": "42ef5719506be0ffa1d886b81ceefc1cc6f7712a8f6f79d29170c7628d10f536"
+    },
+    {
+      "path": "BE/tests/test_telegram_state_models.py",
+      "bytes": 1744,
+      "sha256": "4135567fb23553fd04217167994c46d73c9ad40a114342c689ca6a7003ce73c2"
+    },
+    {
+      "path": "BE/tests/test_telegram_state_storage.py",
+      "bytes": 4327,
+      "sha256": "ab4b2445d3c8d7a4b214a59cb0325dac70a0fd180aea78cb57f6ad005f673f72"
+    },
+    {
+      "path": "BE/tests/test_trading_assistant.py",
+      "bytes": 14838,
+      "sha256": "f0aa890b51923af5f4346948e71a1fd257f183b415a20b7774b071d92232aa7b"
+    },
+    {
+      "path": "BE/tests/test_websocket_demo.py",
+      "bytes": 4702,
+      "sha256": "2b4303604a2648f67aad82770fa0cefcb2b87c649db70750afafe0440e24c84f"
+    },
+    {
+      "path": "FE/.env.example",
+      "bytes": 680,
+      "sha256": "e507578a703b323333f9a2833e2076519a93dd0202848f2d64b69f2ed94127f9"
+    },
+    {
+      "path": "FE/.gitignore",
+      "bytes": 327,
+      "sha256": "aa91a0ffa159151b66fc73604bc7f7a4e7b6dc0455bb8ff319c7300c30daccbc"
+    },
+    {
+      "path": "FE/README.md",
+      "bytes": 6680,
+      "sha256": "7a52d0f65d731a80a390993e0ca55566e9aa7dbb9fb0064d8dcca5d346056503"
+    },
+    {
+      "path": "FE/index.html",
+      "bytes": 1386,
+      "sha256": "f7ae8666b2a731ad26e5f9fe9f979875c7b9a9c4093726f7dbb11786e85838b5"
+    },
+    {
+      "path": "FE/package-lock.json",
+      "bytes": 58385,
+      "sha256": "a8524d6279300790fcc3116ac29438510e16bf87883bfb926d96843089950075"
+    },
+    {
+      "path": "FE/package.json",
+      "bytes": 469,
+      "sha256": "5c268fb66770ab845e57e0132671b17cceca85b30de23c143f0b671856b3245a"
+    },
+    {
+      "path": "FE/server/telegramTestProxy.js",
+      "bytes": 1603,
+      "sha256": "288de831fc32bee9f9d0f76913bad4dc75121f7a2c19a6be21ba32174cd1c7c8"
+    },
+    {
+      "path": "FE/src/App.jsx",
+      "bytes": 17847,
+      "sha256": "9f6eab240e96148b8e597ac80b5bde0e065a3aac6a59d63363df45b80b569ce8"
+    },
+    {
+      "path": "FE/src/LanguageContext.jsx",
+      "bytes": 1464,
+      "sha256": "73f6fd301aa6404ddaaf485a925c372c856749f2391f62884b7325e3e0b438af"
+    },
+    {
+      "path": "FE/src/api/assistantClient.js",
+      "bytes": 2303,
+      "sha256": "3ee6885b4dd388cb8aee8c9ef75c6896db89fe7db29fb16be56b8e4dd13f1129"
+    },
+    {
+      "path": "FE/src/api/client.js",
+      "bytes": 359,
+      "sha256": "44482ebcd1e900a0c623a00f194b68b57e95adfc7787c8bce35afad29dc845d4"
+    },
+    {
+      "path": "FE/src/api/localRules.js",
+      "bytes": 1766,
+      "sha256": "9a78ba16c3159e4fe9145e02d6f5983fbc394c9d0509ec80e4de110cec0eee7c"
+    },
+    {
+      "path": "FE/src/api/marketClient.js",
+      "bytes": 1431,
+      "sha256": "3c496b1d72971b428aaf0b2cf30d9f19ccdc6ad701182e3a11bdbc1e3f93569c"
+    },
+    {
+      "path": "FE/src/api/mockData.js",
+      "bytes": 865,
+      "sha256": "de01bb844c19e7d81ed7a03b3110c762874529ed3e71d39957c066e0b050220b"
+    },
+    {
+      "path": "FE/src/api/rulesClient.js",
+      "bytes": 2250,
+      "sha256": "174f43c29e08cf7238a7cb13366cf61a1d1e5be67d5613d9799b600060c2be68"
+    },
+    {
+      "path": "FE/src/components/Icon.jsx",
+      "bytes": 1615,
+      "sha256": "146cf9f980f7b7ac7b8ed37a2a4afe320c7e76438972e5ea7d09288a4b988fe3"
+    },
+    {
+      "path": "FE/src/components/IndicatorPanel.jsx",
+      "bytes": 4426,
+      "sha256": "96f29ce3b540a9fcb91d4c911c2d4e0f6721a68f230caff939dec722162c40f3"
+    },
+    {
+      "path": "FE/src/components/MarketAssistant.jsx",
+      "bytes": 8210,
+      "sha256": "445cd760df4127833202fff57831f7246aff494b50cb2eedf5837a66e885aba3"
+    },
+    {
+      "path": "FE/src/components/RuleForm.jsx",
+      "bytes": 12839,
+      "sha256": "f8fe4b4548d32b5b61ad2c67015e1d97cd35766d47ae48c09dbc9f6003a90d75"
+    },
+    {
+      "path": "FE/src/components/RuleList.jsx",
+      "bytes": 4454,
+      "sha256": "9d0e9a5e31a5e7a9dfcc8a051165d28710f7004eae1253f261e19fd11559a9d2"
+    },
+    {
+      "path": "FE/src/components/SymbolCombobox.jsx",
+      "bytes": 3805,
+      "sha256": "2e6e62cef8b08dde9cbcc74d58e9669c2aa2930c2cf4306f39de95a8b3e759a6"
+    },
+    {
+      "path": "FE/src/components/TelegramTestPanel.jsx",
+      "bytes": 4070,
+      "sha256": "ab09ffbab134858772eea3fcef5b79ba7e4df9bcd6aae3427d848f34645f7d78"
+    },
+    {
+      "path": "FE/src/components/TradingViewWidget.jsx",
+      "bytes": 4625,
+      "sha256": "268f6a1af7cd70743caf4f760ce201113ceef3f2681cbf2a5cdf88e863b63357"
+    },
+    {
+      "path": "FE/src/constants.js",
+      "bytes": 4418,
+      "sha256": "528bdd08b5d64fb7509f1a8f8e065c08124e71e90319690bd93da69e2af2b739"
+    },
+    {
+      "path": "FE/src/i18n.js",
+      "bytes": 23513,
+      "sha256": "e8741b10fbc42b3c220d63d16b85ffb7c4804c12974cce2bfc8fa3e35cf4c3b9"
+    },
+    {
+      "path": "FE/src/index.css",
+      "bytes": 31933,
+      "sha256": "051fbd2da58062a89b8ea7bbb4c9731d7e0233229ecbd7e34682f916e01e2dbc"
+    },
+    {
+      "path": "FE/src/indicatorUtils.js",
+      "bytes": 1213,
+      "sha256": "f699e610c84c93175224d33d2b738fc7b97c8af1321d9090ce3a952288d7ff4d"
+    },
+    {
+      "path": "FE/src/main.jsx",
+      "bytes": 342,
+      "sha256": "64ac41f5f35fee543f99110f7e94bb45118f42dfceb4211af5ffa57757b27946"
+    },
+    {
+      "path": "FE/src/ruleUtils.js",
+      "bytes": 4972,
+      "sha256": "2606f9e137769680b5e4f0bc789ba140ac448d816ba8ca20587e57bfaecb072f"
+    },
+    {
+      "path": "FE/tests/assistantClient.test.js",
+      "bytes": 3085,
+      "sha256": "ea14c41d5faa33d5372cf3b02971953698d55908fe0d61c383d684624adab259"
+    },
+    {
+      "path": "FE/tests/i18n.test.js",
+      "bytes": 4347,
+      "sha256": "cdb7cfa442f57255fae801f5557b4ad0913aba367cd00e080bf4ea015f01c1dd"
+    },
+    {
+      "path": "FE/tests/marketClient.test.js",
+      "bytes": 4088,
+      "sha256": "7bf9100a193b61cf828a22ff929ab50bb85f56b6dca9dbbfe8715c99b93096b1"
+    },
+    {
+      "path": "FE/tests/rulesTrigger.test.js",
+      "bytes": 1312,
+      "sha256": "957d0d82cce59668cf5a7ede7a96f647b6d3d8315af51466408fd881d87fe112"
+    },
+    {
+      "path": "FE/tests/telegramTestProxy.test.js",
+      "bytes": 2748,
+      "sha256": "e7e4d2faad64fd3a1c63329ef3bfd6ad18aac3104e2da209364f936ba27067d3"
+    },
+    {
+      "path": "FE/vite.config.js",
+      "bytes": 1839,
+      "sha256": "26c850e995ac72ae4fa47b57cd3947352cabbbf0fad414055bee5b090081aeba"
+    },
+    {
+      "path": "GIAI_THICH_DU_AN_CHI_TIET.md",
+      "bytes": 7296,
+      "sha256": "5e9652bfba5f952564eab814d5e619609af16f8be730272a29dd5c397be0cfa1"
+    },
+    {
+      "path": "HUONG_DAN_CHAY.md",
+      "bytes": 15107,
+      "sha256": "93dc1866bfa29c0673f7b7ebaa0f895b3ba92a8b5dbe05b35ae8ae149316c034"
+    },
+    {
+      "path": "PROJECT_PLAN.md",
+      "bytes": 32676,
+      "sha256": "175eae5adaaaa9a6fd0e61c00d18c3edb17bb0f0bb16744f21502005599cb14e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 20135,
+      "sha256": "a96858d4ab0cb9da84e7ae335ed2d1ddb66ee262711b511a4cc41b7dc2ac668a"
+    },
+    {
+      "path": "SPEC_KIT.md",
+      "bytes": 25279,
+      "sha256": "13ad6538cf99742c98080cec8d763f9d6686f32e4d5c99f16609b424de1120f0"
+    },
+    {
+      "path": "TIEN_DO_CONG_VIEC.md",
+      "bytes": 4412,
+      "sha256": "26156c15cf1bb6cc3d55d416d346d510a34914a87a058f67e1ee7633b28e6145"
+    },
+    {
+      "path": "WEBSOCKET_DEMO.md",
+      "bytes": 5749,
+      "sha256": "e3138d0de6963e6ed0eb509e72f08f77f787cd1df585b725f55c1b942b0e3eb1"
+    },
+    {
+      "path": "compose.yaml",
+      "bytes": 2451,
+      "sha256": "ec7dcd8b50a878732a542e9e3be9c5f532b037f3647084c323649d3a27d71854"
+    },
+    {
+      "path": "prototype-project-plan.docx",
+      "bytes": 115209,
+      "sha256": "f273412a0062c6ae99f229cdb7109ec86055eb1ddcb670ca3a69cb79d31b0331"
+    },
+    {
+      "path": "specs/001-calculate-indicators/checklists/requirements.md",
+      "bytes": 2737,
+      "sha256": "b746e9d386436b0fe525359e2919007bbe723206e2352b3f3dd3589405f5857e"
+    },
+    {
+      "path": "specs/001-calculate-indicators/contracts/indicators-api.md",
+      "bytes": 4513,
+      "sha256": "a84c3223f8c67c6e0bb2644b8b42bf0e028b2d4f95e74d97743463706b22f223"
+    },
+    {
+      "path": "specs/001-calculate-indicators/data-model.md",
+      "bytes": 4735,
+      "sha256": "65e62df329ce3cd56dc5393e1b846969e0985d0340d8f1105eecc42dc634e25b"
+    },
+    {
+      "path": "specs/001-calculate-indicators/plan.md",
+      "bytes": 7987,
+      "sha256": "9ff10ef2a23749c9f392849607137ca408a32209d2cca169b1b56960bcd8cf46"
+    },
+    {
+      "path": "specs/001-calculate-indicators/quickstart.md",
+      "bytes": 9229,
+      "sha256": "a97dca69fa25789408d9a072761f293af8d44e95f626d026bf70e3f13be3ef96"
+    },
+    {
+      "path": "specs/001-calculate-indicators/research.md",
+      "bytes": 6655,
+      "sha256": "b6a8329a98387e11107767a6228253101cfb529b013af2c92538707f291a7a7e"
+    },
+    {
+      "path": "specs/001-calculate-indicators/spec.md",
+      "bytes": 19742,
+      "sha256": "591222ad0b0788214c3d8e5d36ef94cbe7c49410fc6e63299dc5e029d60738a0"
+    },
+    {
+      "path": "specs/001-calculate-indicators/tasks.md",
+      "bytes": 19520,
+      "sha256": "fe19eaf92d68c44c9d8b2bc39ddbc4b425a9dc8dc95c69cc02670eba4efc2db6"
+    },
+    {
+      "path": "specs/002-telegram-notifications/checklists/requirements.md",
+      "bytes": 2016,
+      "sha256": "b81303d85b124e1219c3493142d1026f6e54168aa17853c0775feb942bbcb54f"
+    },
+    {
+      "path": "specs/002-telegram-notifications/contracts/telegram-scheduler.md",
+      "bytes": 4989,
+      "sha256": "467817f9d11eed4a28ce092760d76796b8832463fd6edb8149aa4e5908156571"
+    },
+    {
+      "path": "specs/002-telegram-notifications/data-model.md",
+      "bytes": 6237,
+      "sha256": "6a6a65421b40c54b500e79d49339e69d7a9e4357d11f72bf78b823d47303df21"
+    },
+    {
+      "path": "specs/002-telegram-notifications/plan.md",
+      "bytes": 14643,
+      "sha256": "b7abc134ac58ef2c34c5cc1b847fc3b5e1ab40a262438e8d83273833e849ce72"
+    },
+    {
+      "path": "specs/002-telegram-notifications/quickstart.md",
+      "bytes": 9023,
+      "sha256": "8afe310fda81d2c9d2949cacce8f2198633af13b08a9424d25415f368e428add"
+    },
+    {
+      "path": "specs/002-telegram-notifications/research.md",
+      "bytes": 6472,
+      "sha256": "3580b4988deb7ef85c27b0c02ba57ab1fbbd511181b180ae69c914311e45af89"
+    },
+    {
+      "path": "specs/002-telegram-notifications/spec.md",
+      "bytes": 23871,
+      "sha256": "f5e7d9b1d1ec2e240e7f14462d8923fe213347ed0b5214b381b622192a9a257c"
+    },
+    {
+      "path": "specs/002-telegram-notifications/tasks.md",
+      "bytes": 29800,
+      "sha256": "26360867ddf0d277707b6da38f8c92fbb3ca8e2c2da6cb8e4f59d5d89f12e643"
+    }
+  ]
+}

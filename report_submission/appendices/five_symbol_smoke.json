@@ -1,0 +1,55 @@
+{
+  "health": {
+    "status": "ok",
+    "redis": "ok",
+    "market": "spot"
+  },
+  "method": "Five on-demand REST/cache reads through the running backend; not a background updater coverage test.",
+  "results": [
+    {
+      "symbol": "BTCUSDT",
+      "http_status": 200,
+      "candle_count": 300,
+      "source": "binance",
+      "stale": false,
+      "fetched_at": "2026-10-15T15:50:04.838614Z",
+      "elapsed_seconds": 0.75
+    },
+    {
+      "symbol": "ETHUSDT",
+      "http_status": 200,
+      "candle_count": 300,
+      "source": "binance",
+      "stale": false,
+      "fetched_at": "2026-10-15T15:50:04.967674Z",
+      "elapsed_seconds": 0.119
+    },
+    {
+      "symbol": "BNBUSDT",
+      "http_status": 200,
+      "candle_count": 300,
+      "source": "binance",
+      "stale": false,
+      "fetched_at": "2026-10-15T15:50:05.079109Z",
+      "elapsed_seconds": 0.111
+    },
+    {
+      "symbol": "SOLUSDT",
+      "http_status": 200,
+      "candle_count": 300,
+      "source": "binance",
+      "stale": false,
+      "fetched_at": "2026-10-15T15:50:05.192757Z",
+      "elapsed_seconds": 0.114
+    },
+    {
+      "symbol": "XRPUSDT",
+      "http_status": 200,
+      "candle_count": 300,
+      "source": "binance",
+      "stale": false,
+      "fetched_at": "2026-10-15T15:50:05.305661Z",
+      "elapsed_seconds": 0.113
+    }
+  ]
+}
