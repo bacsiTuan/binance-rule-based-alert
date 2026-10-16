@@ -1,0 +1,188 @@
+{
+  "id": "AI03",
+  "category": "Rule interpretation",
+  "prompt": "Have any of my saved rules fired? Explain which rule types Telegram supports and distinguish saved definitions from verified triggers. Use at most 90 words.",
+  "request": {
+    "symbol": "BTCUSDT",
+    "interval": "1h",
+    "language": "vi",
+    "history": []
+  },
+  "started_at_utc": "2026-10-15T15:46:15.127065+00:00",
+  "http_status": 200,
+  "answer": "No — there are no verified triggers in this snapshot. The file shows one saved rule (RSI 14 gte 0 on closed 1h) but its evaluation_status is \"not_evaluated\" and configured definitions are not the same as a verified trigger. Only a backend-supplied triggered_rule event would indicate a true alert.\n\nTelegram-supported rule types: enabled SMA/EMA/RSI compared to a number using gt/gte/lt/lte on closed 1h/1d/1w candles. Cross, close-price, and indicator-to-indicator rules are skipped. A true condition would send once until a valid false condition rearms it.",
+  "context": {
+    "market": "spot",
+    "symbol": "BTCUSDT",
+    "interval": "1h",
+    "source": "cache",
+    "stale": false,
+    "fetched_at": "2026-10-15T15:46:09.820673+00:00",
+    "evaluated_at": 1792079175128,
+    "price_basis": "last closed candle close, not a live quote",
+    "last_close": "81871.95000000",
+    "last_open_time": 1792072800000,
+    "last_close_time": 1792076399999,
+    "last_close_at": "2026-10-15T14:59:59.999000+00:00",
+    "closed_candles": 299,
+    "indicators": [
+      {
+        "name": "sma",
+        "period": 20,
+        "value": "81321.62850000",
+        "status": "ok"
+      },
+      {
+        "name": "sma",
+        "period": 50,
+        "value": "82384.42560000",
+        "status": "ok"
+      },
+      {
+        "name": "sma",
+        "period": 200,
+        "value": "82811.03840000",
+        "status": "ok"
+      },
+      {
+        "name": "ema",
+        "period": 12,
+        "value": "81160.764760695644618733872791682856089727452775773",
+        "status": "ok"
+      },
+      {
+        "name": "ema",
+        "period": 26,
+        "value": "81547.326569034298273939119562332478462580526380259",
+        "status": "ok"
+      },
+      {
+        "name": "rsi",
+        "period": 14,
+        "value": "53.008913494769071383380231002941172122921300490892",
+        "status": "ok"
+      }
+    ],
+    "recent_closes": [
+      {
+        "close_time": 1791993599999,
+        "close": "81641.44000000"
+      },
+      {
+        "close_time": 1791997199999,
+        "close": "82012.61000000"
+      },
+      {
+        "close_time": 1792000799999,
+        "close": "81587.10000000"
+      },
+      {
+        "close_time": 1792004399999,
+        "close": "81724.00000000"
+      },
+      {
+        "close_time": 1792007999999,
+        "close": "81840.53000000"
+      },
+      {
+        "close_time": 1792011599999,
+        "close": "81784.05000000"
+      },
+      {
+        "close_time": 1792015199999,
+        "close": "81778.46000000"
+      },
+      {
+        "close_time": 1792018799999,
+        "close": "81660.01000000"
+      },
+      {
+        "close_time": 1792022399999,
+        "close": "81682.01000000"
+      },
+      {
+        "close_time": 1792025999999,
+        "close": "81656.01000000"
+      },
+      {
+        "close_time": 1792029599999,
+        "close": "81640.01000000"
+      },
+      {
+        "close_time": 1792033199999,
+        "close": "81538.01000000"
+      },
+      {
+        "close_time": 1792036799999,
+        "close": "80928.00000000"
+      },
+      {
+        "close_time": 1792040399999,
+        "close": "81597.32000000"
+      },
+      {
+        "close_time": 1792043999999,
+        "close": "80591.73000000"
+      },
+      {
+        "close_time": 1792047599999,
+        "close": "80892.93000000"
+      },
+      {
+        "close_time": 1792051199999,
+        "close": "81541.34000000"
+      },
+      {
+        "close_time": 1792054799999,
+        "close": "81380.29000000"
+      },
+      {
+        "close_time": 1792058399999,
+        "close": "81265.04000000"
+      },
+      {
+        "close_time": 1792061999999,
+        "close": "81043.87000000"
+      },
+      {
+        "close_time": 1792065599999,
+        "close": "80980.01000000"
+      },
+      {
+        "close_time": 1792069199999,
+        "close": "80552.11000000"
+      },
+      {
+        "close_time": 1792072799999,
+        "close": "80208.89000000"
+      },
+      {
+        "close_time": 1792076399999,
+        "close": "81871.95000000"
+      }
+    ],
+    "rule_evaluation_status": "not_evaluated; configured definitions only, not triggered alerts",
+    "rules": [
+      {
+        "id": 4,
+        "symbol": "BTCUSDT",
+        "timeframe": "1h",
+        "indicator": {
+          "type": "rsi",
+          "length": 14
+        },
+        "operator": "gte",
+        "target": 0,
+        "candle_mode": "closed",
+        "enabled": true,
+        "evaluation_status": "not_evaluated",
+        "has_indicator_reading": true
+      }
+    ],
+    "matching_rule_count": 1
+  },
+  "warnings": [],
+  "model": "gpt-5-mini",
+  "generated_at": "2026-10-15T15:46:19.996280+00:00",
+  "elapsed_seconds": 4.872
+}

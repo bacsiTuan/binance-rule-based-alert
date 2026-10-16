@@ -1,0 +1,146 @@
+
+> indicator-alert-frontend@0.1.0 test
+> node --test tests/*.test.js
+
+TAP version 13
+# Subtest: chat requests English responses even when the UI uses Vietnamese, preserving context and history
+ok 1 - chat requests English responses even when the UI uses Vietnamese, preserving context and history
+  ---
+  duration_ms: 16.7799
+  type: 'test'
+  ...
+# Subtest: provider errors are localized without exposing internal messages
+ok 2 - provider errors are localized without exposing internal messages
+  ---
+  duration_ms: 0.6812
+  type: 'test'
+  ...
+# Subtest: network errors are readable and cancellation stays cancellation
+ok 3 - network errors are readable and cancellation stays cancellation
+  ---
+  duration_ms: 0.2354
+  type: 'test'
+  ...
+# Subtest: manual Telegram test sends confirmation without putting the environment key in the browser request
+ok 4 - manual Telegram test sends confirmation without putting the environment key in the browser request
+  ---
+  duration_ms: 0.3254
+  type: 'test'
+  ...
+# Subtest: manual test authorization and rate-limit errors remain actionable in both languages
+ok 5 - manual test authorization and rate-limit errors remain actionable in both languages
+  ---
+  duration_ms: 0.4999
+  type: 'test'
+  ...
+# Subtest: English is the default; saved Vietnamese is respected and unavailable storage falls back safely
+ok 6 - English is the default; saved Vietnamese is respected and unavailable storage falls back safely
+  ---
+  duration_ms: 0.7801
+  type: 'test'
+  ...
+# Subtest: editing existing indicator-to-indicator rules preserves both sides instead of replacing the target with 30
+ok 7 - editing existing indicator-to-indicator rules preserves both sides instead of replacing the target with 30
+  ---
+  duration_ms: 0.7624
+  type: 'test'
+  ...
+# Subtest: Every form option and template has an English translation with matching interpolation parameters
+ok 8 - Every form option and template has an English translation with matching interpolation parameters
+  ---
+  duration_ms: 0.714
+  type: 'test'
+  ...
+# Subtest: Rule previews and validation change language without changing stored rule data or the request payload
+ok 9 - Rule previews and validation change language without changing stored rule data or the request payload
+  ---
+  duration_ms: 0.3452
+  type: 'test'
+  ...
+# Subtest: An existing error can be rendered in either language without making a new request
+ok 10 - An existing error can be rendered in either language without making a new request
+  ---
+  duration_ms: 0.2728
+  type: 'test'
+  ...
+# Subtest: Target values accept thousands separators and reject ambiguous commas
+ok 11 - Target values accept thousands separators and reject ambiguous commas
+  ---
+  duration_ms: 0.3118
+  type: 'test'
+  ...
+# Subtest: symbols envelope and metadata are preserved
+ok 12 - symbols envelope and metadata are preserved
+  ---
+  duration_ms: 16.788
+  type: 'test'
+  ...
+# Subtest: form schema maps to actual POST contract for both sides and open candles
+ok 13 - form schema maps to actual POST contract for both sides and open candles
+  ---
+  duration_ms: 0.6112
+  type: 'test'
+  ...
+# Subtest: close is excluded, equal selections are deduplicated, default selections remain valid
+ok 14 - close is excluded, equal selections are deduplicated, default selections remain valid
+  ---
+  duration_ms: 0.1412
+  type: 'test'
+  ...
+# Subtest: FastAPI string, validation list, object errors and cooldown produce readable messages
+ok 15 - FastAPI string, validation list, object errors and cooldown produce readable messages
+  ---
+  duration_ms: 1.3585
+  type: 'test'
+  ...
+# Subtest: offline, invalid JSON and cancellation do not become misleading indicator results
+ok 16 - offline, invalid JSON and cancellation do not become misleading indicator results
+  ---
+  duration_ms: 0.7728
+  type: 'test'
+  ...
+# Subtest: display retains exact integer digits and handles missing and very small values
+ok 17 - display retains exact integer digits and handles missing and very small values
+  ---
+  duration_ms: 0.1738
+  type: 'test'
+  ...
+# Subtest: rule trigger sends a confirmed request ID without browser credentials
+ok 18 - rule trigger sends a confirmed request ID without browser credentials
+  ---
+  duration_ms: 17.7071
+  type: 'test'
+  ...
+# Subtest: disabled watcher points to the separate AI test instead of an untranslated server error
+ok 19 - disabled watcher points to the separate AI test instead of an untranslated server error
+  ---
+  duration_ms: 0.8046
+  type: 'test'
+  ...
+# Subtest: server injects environment key only for a local same-origin JSON test request
+ok 20 - server injects environment key only for a local same-origin JSON test request
+  ---
+  duration_ms: 0.7607
+  type: 'test'
+  ...
+# Subtest: cross-origin, remote, missing-origin and form requests cannot use automatic credentials
+ok 21 - cross-origin, remote, missing-origin and form requests cannot use automatic credentials
+  ---
+  duration_ms: 0.4349
+  type: 'test'
+  ...
+# Subtest: missing configuration fails closed instead of forwarding an unauthenticated test
+ok 22 - missing configuration fails closed instead of forwarding an unauthenticated test
+  ---
+  duration_ms: 0.1562
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 124.0932
